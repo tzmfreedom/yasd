@@ -1,6 +1,10 @@
 package main
 
-import "os"
+import (
+	"os"
+
+	"github.com/tzmfreedom/yasd/cli"
+)
 
 const (
 	ExitCodeOK int = iota
@@ -8,8 +12,9 @@ const (
 )
 
 func main() {
-	cli := NewCli()
+	cli := cli.NewCli()
 	err := cli.Run(os.Args)
+
 	statusCode := ExitCodeOK
 	if err != nil {
 		statusCode = ExitCodeError
