@@ -26,6 +26,7 @@ type config struct {
 	UpsertKey  string
 	Output     string
 	Format     string
+	Mapping    string
 }
 
 type Logger struct {
@@ -89,6 +90,10 @@ func (c *CLI) Run(args []string) error {
 		cli.StringFlag{
 			Name:        "encoding",
 			Destination: &c.Config.Encoding,
+		},
+		cli.StringFlag{
+			Name:        "mapping",
+			Destination: &c.Config.Mapping,
 		},
 	}
 

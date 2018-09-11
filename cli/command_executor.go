@@ -3,6 +3,7 @@ package cli
 import (
 	"encoding/csv"
 	"io"
+	"io/ioutil"
 	"os"
 
 	"strings"
@@ -11,6 +12,7 @@ import (
 	"github.com/tzmfreedom/go-soapforce"
 	"golang.org/x/text/encoding/japanese"
 	"golang.org/x/text/transform"
+	"gopkg.in/yaml.v2"
 )
 
 type CommandExecutor struct {
@@ -58,6 +60,10 @@ func (c *CommandExecutor) insert(cfg *config) error {
 		return err
 	}
 
+	if err != nil {
+		return err
+	}
+
 	reader, fp, err := getReader(cfg)
 	if err != nil {
 		return err
@@ -66,6 +72,7 @@ func (c *CommandExecutor) insert(cfg *config) error {
 
 	sobjects := []*soapforce.SObject{}
 	headers, err := reader.Read()
+	headers, err = mapping(headers, cfg)
 	if err != nil {
 		return err
 	}
@@ -290,7 +297,7 @@ func NewCsvWriter(cfg *config) (*CsvWriter, error) {
 		csvWriter = csv.NewWriter(fp)
 		writer = &CsvWriter{
 			writer: csvWriter,
-			fp: fp,
+			fp:     fp,
 		}
 	} else {
 		csvWriter = csv.NewWriter(os.Stdout)
@@ -330,4 +337,25 @@ func getWriter(cfg *config) (writer, error) {
 	default:
 		return NewCsvWriter(cfg)
 	}
+}
+
+func mapping(headers []string, cfg *config) ([]string, error) {
+	mapping := map[string]string{}
+	buf, err := ioutil.ReadFile(cfg.Mapping)
+	if err != nil {
+		return nil, err
+	}
+	err = yaml.Unmarshal(buf, mapping)
+	if err != nil {
+		return nil, err
+	}
+	returnHeaders := []string{}
+	for _, h := range headers {
+		if v, ok := mapping[h]; ok {
+			returnHeaders = append(returnHeaders, v)
+		} else {
+			returnHeaders = append(returnHeaders, h)
+		}
+	}
+	return returnHeaders, nil
 }
