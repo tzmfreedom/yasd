@@ -1,0 +1,19 @@
+language: go
+install:
+- dep ensure
+script:
+- make test
+before_deploy:
+- make cross-build
+- make dist
+deploy:
+  provider: releases
+  api_key:
+    secure: UrUEtZG9VhbC4EDgy2K6MZ963ttw4dh5ejMJiH2BERoWghPgZ/lGnaEhQVCWg/UVFSY9fgv2P9G+2G9OFsqY90le6WD0zH6yEaWYOAwgcYAS+ZB6pLvIudjrQ5FZMHrG5wtUSknkVRXrGX7QkxW784Z5+E9BuSS1zs8zR+E5rjieGfYDz5DMM6cSfj9RagnNwybc3GzKUNGqqSSZ5lJ4D6H1mnuPeAxO7RsefFhf9Qw/wXo3Ssxl0UFehZ0PuKN3hjcdIOutiI5/fmeMzFYQUJIOHDT95VXF3jPWjjvrpUDetRMC/CZW1OVDGQ2O2BkGwSIMBDQ9R/GNx//YY6xFEaWD+WQ/903SRxgpMYagr7d5yr71AJMTb6HYuXP4nk3dINYbxAHlXVXiDB5mxXGKuZLYYrMt+CJBC2WzYaIRr8mCqWP4ii7BfbxEyfHS16qMHyfmQvk+wJAg9p1bo9J38KWS9p3g/tCupk/7ZCRZxr5WiS7GTiRO3aybGmEYpSuF9ysrhgjIbm5HC/dq/xyGw5HtHuNimhKiVrbP4/1tMajk6hJfJtdBBFX5bjOpt7eDDkUY6VtEImqyW4ohlbGY+nZM8mEcMNcV+aD2dz1cwgKh+4NVBS2NU7tml/GfZik2WQdeaDbCmyFwiVmtMinWKQjVTKUjmNdXzfIrK16Bb+I=
+  skip_cleanup: true
+  overwrite: true
+  file_glob: true
+  file: dist/*.{tar.gz}
+  on:
+    repo: tzmfreedom/yasd
+    tags: true
