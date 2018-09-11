@@ -7,7 +7,6 @@ import (
 
 	"github.com/k0kubun/pp"
 	"github.com/tzmfreedom/go-soapforce"
-	"github.com/derekparker/delve/dwarf/reader"
 )
 
 type CommandExecutor struct {
