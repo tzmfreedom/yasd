@@ -23,6 +23,9 @@ type config struct {
 	InputFile  string
 	Delimiter  string
 	Encoding   string
+	UpsertKey  string
+	Output     string
+	Format     string
 }
 
 type Logger struct {
@@ -45,6 +48,7 @@ const (
 func NewCli() *CLI {
 	c := &CLI{
 		client: soapforce.NewClient(),
+		Config: &config{},
 	}
 	return c
 }
@@ -79,6 +83,7 @@ func (c *CLI) Run(args []string) error {
 		},
 		cli.StringFlag{
 			Name:        "delimiter",
+			Value:       ",",
 			Destination: &c.Config.Delimiter,
 		},
 		cli.StringFlag{
@@ -101,18 +106,22 @@ func (c *CLI) Run(args []string) error {
 				defaultFlags,
 				[]cli.Flag{
 					cli.StringFlag{
-						Name:        "query",
+						Name:        "query, q",
 						Destination: &c.Config.Query,
+					},
+					cli.StringFlag{
+						Name:        "output, o",
+						Destination: &c.Config.Output,
+					},
+					cli.StringFlag{
+						Name:        "format",
+						Destination: &c.Config.Format,
 					},
 				},
 			),
 			Action: func(ctx *cli.Context) error {
 				executor := NewCommandExecutor()
-				err := executor.query(c.Config)
-				if err != nil {
-					return err
-				}
-				return nil
+				return executor.query(c.Config)
 			},
 		},
 		{
@@ -123,18 +132,18 @@ func (c *CLI) Run(args []string) error {
 				defaultFlags,
 				[]cli.Flag{
 					cli.StringFlag{
-						Name:        "file",
+						Name:        "file, f",
 						Destination: &c.Config.InputFile,
+					},
+					cli.StringFlag{
+						Name:        "type, t",
+						Destination: &c.Config.Type,
 					},
 				},
 			),
 			Action: func(ctx *cli.Context) error {
 				executor := NewCommandExecutor()
-				err := executor.insert(c.Config)
-				if err != nil {
-					return err
-				}
-				return nil
+				return executor.insert(c.Config)
 			},
 		},
 		{
@@ -145,18 +154,18 @@ func (c *CLI) Run(args []string) error {
 				defaultFlags,
 				[]cli.Flag{
 					cli.StringFlag{
-						Name:        "file",
+						Name:        "file, f",
 						Destination: &c.Config.InputFile,
+					},
+					cli.StringFlag{
+						Name:        "type, t",
+						Destination: &c.Config.Type,
 					},
 				},
 			),
 			Action: func(ctx *cli.Context) error {
 				executor := NewCommandExecutor()
-				err := executor.update(c.Config)
-				if err != nil {
-					return err
-				}
-				return nil
+				return executor.update(c.Config)
 			},
 		},
 		{
@@ -166,18 +175,23 @@ func (c *CLI) Run(args []string) error {
 				defaultFlags,
 				[]cli.Flag{
 					cli.StringFlag{
-						Name:        "file",
+						Name:        "file, f",
 						Destination: &c.Config.InputFile,
+					},
+					cli.StringFlag{
+						Name:        "type, t",
+						Destination: &c.Config.Type,
+					},
+					cli.StringFlag{
+						Name:        "upsertkey, k",
+						Value:       "Id",
+						Destination: &c.Config.Type,
 					},
 				},
 			),
 			Action: func(ctx *cli.Context) error {
 				executor := NewCommandExecutor()
-				err := executor.upsert(c.Config)
-				if err != nil {
-					return err
-				}
-				return nil
+				return executor.upsert(c.Config)
 			},
 		},
 		{
@@ -191,15 +205,15 @@ func (c *CLI) Run(args []string) error {
 						Name:        "file",
 						Destination: &c.Config.InputFile,
 					},
+					cli.StringFlag{
+						Name:        "type, t",
+						Destination: &c.Config.Type,
+					},
 				},
 			),
 			Action: func(ctx *cli.Context) error {
 				executor := NewCommandExecutor()
-				err := executor.delete(c.Config)
-				if err != nil {
-					return err
-				}
-				return nil
+				return executor.delete(c.Config)
 			},
 		},
 		{
@@ -212,15 +226,15 @@ func (c *CLI) Run(args []string) error {
 						Name:        "file",
 						Destination: &c.Config.InputFile,
 					},
+					cli.StringFlag{
+						Name:        "type, t",
+						Destination: &c.Config.Type,
+					},
 				},
 			),
 			Action: func(ctx *cli.Context) error {
 				executor := NewCommandExecutor()
-				err := executor.undelete(c.Config)
-				if err != nil {
-					return err
-				}
-				return nil
+				return executor.undelete(c.Config)
 			},
 		},
 	}

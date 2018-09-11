@@ -51,6 +51,10 @@ endif
 deps:
 	dep ensure
 
+.PHONY: build/dev
+build/dev:
+	go build -o bin/$(NAME)
+
 .PHONY: bin/$(NAME) 
 bin/$(NAME): $(SRCS)
 	go build -a -tags netgo -installsuffix netgo $(LDFLAGS) -o bin/$(NAME)
