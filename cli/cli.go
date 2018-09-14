@@ -14,21 +14,22 @@ type CLI struct {
 }
 
 type config struct {
-	Username    string
-	Password    string
-	Endpoint    string
-	ApiVersion  string
-	Query       string
-	Type        string
-	InputFile   string
-	Delimiter   string
-	Encoding    string
-	UpsertKey   string
-	Output      string
-	Format      string
-	Mapping     string
-	ErrorPath   string
-	SuccessPath string
+	Username         string
+	Password         string
+	Endpoint         string
+	ApiVersion       string
+	Query            string
+	Type             string
+	InputFile        string
+	Delimiter        string
+	Encoding         string
+	UpsertKey        string
+	Output           string
+	Format           string
+	Mapping          string
+	ErrorPath        string
+	SuccessPath      string
+	EncyptionKeyPath string
 }
 
 type Logger struct {
@@ -253,6 +254,23 @@ func (c *CLI) Run(args []string) error {
 			Action: func(ctx *cli.Context) error {
 				executor := NewCommandExecutor()
 				return executor.undelete(c.Config)
+			},
+		},
+		{
+			Name:  "generate-key",
+			Usage: "Generate AES Key",
+			Flags: createCommandFlag(
+				defaultFlags,
+				[]cli.Flag{
+					cli.StringFlag{
+						Name:        "key",
+						Destination: &c.Config.EncyptionKeyPath,
+					},
+				},
+			),
+			Action: func(ctx *cli.Context) error {
+				executor := NewCommandExecutor()
+				return executor.generateEncryptionKey(c.Config)
 			},
 		},
 	}

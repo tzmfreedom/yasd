@@ -101,7 +101,7 @@ func (c *CommandExecutor) insert(cfg *config) error {
 	}
 	res, err := c.client.Create(sobjects)
 	if err != nil {
-		return  err
+		return err
 	}
 	err = handler.Handle(res)
 	return err
@@ -326,6 +326,11 @@ func (c *CommandExecutor) undelete(cfg *config) error {
 		return err
 	}
 	err = handler.HandleUndelete(res)
+	return err
+}
+
+func (c *CommandExecutor) generateEncryptionKey(cfg *config) error {
+	err := generateEncryptionKey(cfg.EncyptionKeyPath)
 	return err
 }
 

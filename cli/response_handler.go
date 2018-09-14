@@ -145,4 +145,3 @@ func (h *ResponseWriteHandler) HandleUndelete(results []*soapforce.UndeleteResul
 	h.errorWriter.Flush()
 	return nil
 }
-
