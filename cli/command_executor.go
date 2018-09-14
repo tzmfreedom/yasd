@@ -89,7 +89,10 @@ func (c *CommandExecutor) insert(cfg *config) error {
 		sobjects = append(sobjects, sobject)
 		if len(sobjects) == 200 {
 			res, err := c.client.Create(sobjects)
-			handler.Handle(res)
+			if err != nil {
+				return err
+			}
+			err = handler.Handle(res)
 			if err != nil {
 				return err
 			}
@@ -97,7 +100,10 @@ func (c *CommandExecutor) insert(cfg *config) error {
 		}
 	}
 	res, err := c.client.Create(sobjects)
-	handler.Handle(res)
+	if err != nil {
+		return  err
+	}
+	err = handler.Handle(res)
 	return err
 }
 
@@ -138,7 +144,10 @@ func (c *CommandExecutor) update(cfg *config) error {
 		sobjects = append(sobjects, sobject)
 		if len(sobjects) == 200 {
 			res, err := c.client.Update(sobjects)
-			handler.Handle(res)
+			if err != nil {
+				return err
+			}
+			err = handler.Handle(res)
 			if err != nil {
 				return err
 			}
@@ -146,7 +155,10 @@ func (c *CommandExecutor) update(cfg *config) error {
 		}
 	}
 	res, err := c.client.Update(sobjects)
-	handler.Handle(res)
+	if err != nil {
+		return err
+	}
+	err = handler.Handle(res)
 	return err
 }
 
@@ -190,7 +202,10 @@ func (c *CommandExecutor) upsert(cfg *config) error {
 			if err != nil {
 				return err
 			}
-			handler.HandleUpsert(res)
+			err = handler.HandleUpsert(res)
+			if err != nil {
+				return err
+			}
 			sobjects = sobjects[:0]
 		}
 	}
@@ -198,8 +213,8 @@ func (c *CommandExecutor) upsert(cfg *config) error {
 	if err != nil {
 		return err
 	}
-	handler.HandleUpsert(res)
-	return nil
+	err = handler.HandleUpsert(res)
+	return err
 }
 
 func (c *CommandExecutor) delete(cfg *config) error {
@@ -243,15 +258,19 @@ func (c *CommandExecutor) delete(cfg *config) error {
 			if err != nil {
 				return err
 			}
-			handler.HandleDelete(res)
+			err = handler.HandleDelete(res)
+			if err != nil {
+				return err
+			}
+			ids = ids[:0]
 		}
 	}
 	res, err := c.client.Delete(ids)
 	if err != nil {
 		return err
 	}
-	handler.HandleDelete(res)
-	return nil
+	err = handler.HandleDelete(res)
+	return err
 }
 
 func (c *CommandExecutor) undelete(cfg *config) error {
@@ -295,15 +314,19 @@ func (c *CommandExecutor) undelete(cfg *config) error {
 			if err != nil {
 				return nil
 			}
-			handler.HandleUndelete(res)
+			err = handler.HandleUndelete(res)
+			if err != nil {
+				return nil
+			}
+			ids = ids[:0]
 		}
 	}
 	res, err := c.client.Undelete(ids)
 	if err != nil {
 		return err
 	}
-	handler.HandleUndelete(res)
-	return nil
+	err = handler.HandleUndelete(res)
+	return err
 }
 
 func getReader(cfg *config) (*csv.Reader, *os.File, error) {
