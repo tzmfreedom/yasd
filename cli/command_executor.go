@@ -5,10 +5,8 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
-
 	"strings"
 
-	"github.com/k0kubun/pp"
 	"github.com/tzmfreedom/go-soapforce"
 	"golang.org/x/text/encoding/japanese"
 	"golang.org/x/text/transform"
@@ -60,10 +58,6 @@ func (c *CommandExecutor) insert(cfg *config) error {
 		return err
 	}
 
-	if err != nil {
-		return err
-	}
-
 	reader, fp, err := getReader(cfg)
 	if err != nil {
 		return err
@@ -72,7 +66,14 @@ func (c *CommandExecutor) insert(cfg *config) error {
 
 	sobjects := []*soapforce.SObject{}
 	headers, err := reader.Read()
+	if err != nil {
+		return err
+	}
 	headers, err = mapping(headers, cfg)
+	if err != nil {
+		return err
+	}
+	handler, err := getResponseHandler(cfg)
 	if err != nil {
 		return err
 	}
@@ -87,14 +88,16 @@ func (c *CommandExecutor) insert(cfg *config) error {
 		sobject := createSObject(cfg.Type, headers, fields)
 		sobjects = append(sobjects, sobject)
 		if len(sobjects) == 200 {
-			_, err = c.client.Create(sobjects)
+			res, err := c.client.Create(sobjects)
+			handler.Handle(res)
 			if err != nil {
 				return err
 			}
 			sobjects = sobjects[:0]
 		}
 	}
-	_, err = c.client.Create(sobjects)
+	res, err := c.client.Create(sobjects)
+	handler.Handle(res)
 	return err
 }
 
@@ -115,6 +118,14 @@ func (c *CommandExecutor) update(cfg *config) error {
 	if err != nil {
 		return err
 	}
+	headers, err = mapping(headers, cfg)
+	if err != nil {
+		return err
+	}
+	handler, err := getResponseHandler(cfg)
+	if err != nil {
+		return err
+	}
 	for {
 		fields, err := reader.Read()
 		if err == io.EOF {
@@ -126,14 +137,16 @@ func (c *CommandExecutor) update(cfg *config) error {
 		sobject := createSObject(cfg.Type, headers, fields)
 		sobjects = append(sobjects, sobject)
 		if len(sobjects) == 200 {
-			_, err = c.client.Create(sobjects)
+			res, err := c.client.Update(sobjects)
+			handler.Handle(res)
 			if err != nil {
 				return err
 			}
 			sobjects = sobjects[:0]
 		}
 	}
-	_, err = c.client.Create(sobjects)
+	res, err := c.client.Update(sobjects)
+	handler.Handle(res)
 	return err
 }
 
@@ -154,6 +167,14 @@ func (c *CommandExecutor) upsert(cfg *config) error {
 	if err != nil {
 		return err
 	}
+	headers, err = mapping(headers, cfg)
+	if err != nil {
+		return err
+	}
+	handler, err := getResponseHandler(cfg)
+	if err != nil {
+		return err
+	}
 	for {
 		fields, err := reader.Read()
 		if err == io.EOF {
@@ -165,18 +186,28 @@ func (c *CommandExecutor) upsert(cfg *config) error {
 		sobject := createSObject(cfg.Type, headers, fields)
 		sobjects = append(sobjects, sobject)
 		if len(sobjects) == 200 {
-			_, err = c.client.Upsert(sobjects, cfg.UpsertKey)
+			res, err := c.client.Upsert(sobjects, cfg.UpsertKey)
 			if err != nil {
 				return err
 			}
+			handler.HandleUpsert(res)
 			sobjects = sobjects[:0]
 		}
 	}
-	_, err = c.client.Create(sobjects)
-	return err
+	res, err := c.client.Upsert(sobjects, cfg.UpsertKey)
+	if err != nil {
+		return err
+	}
+	handler.HandleUpsert(res)
+	return nil
 }
 
 func (c *CommandExecutor) delete(cfg *config) error {
+	_, err := c.client.Login(cfg.Username, cfg.Password)
+	if err != nil {
+		return err
+	}
+
 	reader, fp, err := getReader(cfg)
 	if err != nil {
 		return err
@@ -184,6 +215,19 @@ func (c *CommandExecutor) delete(cfg *config) error {
 	defer fp.Close()
 
 	sobjects := make([]*soapforce.SObject, 0)
+	headers, err := reader.Read()
+	if err != nil {
+		return err
+	}
+	headers, err = mapping(headers, cfg)
+	if err != nil {
+		return err
+	}
+	var ids []string
+	handler, err := getResponseHandler(cfg)
+	if err != nil {
+		return err
+	}
 	for {
 		fields, err := reader.Read()
 		if err == io.EOF {
@@ -192,20 +236,30 @@ func (c *CommandExecutor) delete(cfg *config) error {
 		if err != nil {
 			return err
 		}
-		sobject := createSObject(cfg.Type, fields, fields)
-		sobjects = append(sobjects, sobject)
+		id := getId(headers, fields)
+		ids = append(ids, id)
 		if len(sobjects) == 200 {
-			c.client.Create(sobjects)
+			res, err := c.client.Delete(ids)
+			if err != nil {
+				return err
+			}
+			handler.HandleDelete(res)
 		}
 	}
-	_, err = c.client.Create(sobjects)
+	res, err := c.client.Delete(ids)
 	if err != nil {
 		return err
 	}
+	handler.HandleDelete(res)
 	return nil
 }
 
 func (c *CommandExecutor) undelete(cfg *config) error {
+	_, err := c.client.Login(cfg.Username, cfg.Password)
+	if err != nil {
+		return err
+	}
+
 	reader, fp, err := getReader(cfg)
 	if err != nil {
 		return err
@@ -213,6 +267,19 @@ func (c *CommandExecutor) undelete(cfg *config) error {
 	defer fp.Close()
 
 	sobjects := make([]*soapforce.SObject, 0)
+	headers, err := reader.Read()
+	if err != nil {
+		return err
+	}
+	headers, err = mapping(headers, cfg)
+	if err != nil {
+		return err
+	}
+	var ids []string
+	handler, err := getResponseHandler(cfg)
+	if err != nil {
+		return err
+	}
 	for {
 		fields, err := reader.Read()
 		if err == io.EOF {
@@ -221,16 +288,21 @@ func (c *CommandExecutor) undelete(cfg *config) error {
 		if err != nil {
 			return err
 		}
-		sobject := createSObject(cfg.Type, fields, fields)
-		sobjects = append(sobjects, sobject)
+		id := getId(headers, fields)
+		ids = append(ids, id)
 		if len(sobjects) == 200 {
-			c.client.Create(sobjects)
+			res, err := c.client.Undelete(ids)
+			if err != nil {
+				return nil
+			}
+			handler.HandleUndelete(res)
 		}
 	}
-	_, err = c.client.Create(sobjects)
+	res, err := c.client.Undelete(ids)
 	if err != nil {
 		return err
 	}
+	handler.HandleUndelete(res)
 	return nil
 }
 
@@ -253,93 +325,34 @@ func getReader(cfg *config) (*csv.Reader, *os.File, error) {
 	return reader, fp, nil
 }
 
+func getId(headers []string, f []string) string {
+	for i, header := range headers {
+		if header == "Id" {
+			return f[i]
+		}
+	}
+	return ""
+}
+
 func createSObject(sObjectType string, headers []string, f []string) *soapforce.SObject {
 	fields := map[string]string{}
-	for i, header := range headers {
-		fields[header] = f[i]
-	}
 	sobject := &soapforce.SObject{
 		Type:   sObjectType,
 		Fields: fields,
 	}
+	for i, header := range headers {
+		if header == "Id" {
+			sobject.Id = f[i]
+		}
+		fields[header] = f[i]
+	}
 	return sobject
 }
 
-type writer interface {
-	Write(record *soapforce.SObject) error
-	Close()
-}
-
-type PPWriter struct {
-	writer *csv.Writer
-}
-
-func (w *PPWriter) Write(record *soapforce.SObject) error {
-	pp.Print(record)
-	return nil
-}
-
-func (w *PPWriter) Close() {}
-
-type CsvWriter struct {
-	writer *csv.Writer
-	fp     *os.File
-}
-
-func NewCsvWriter(cfg *config) (*CsvWriter, error) {
-	var csvWriter *csv.Writer
-	var writer *CsvWriter
-	if cfg.Output != "" {
-		fp, err := os.Create(cfg.Output)
-		if err != nil {
-			return nil, err
-		}
-		csvWriter = csv.NewWriter(fp)
-		writer = &CsvWriter{
-			writer: csvWriter,
-			fp:     fp,
-		}
-	} else {
-		csvWriter = csv.NewWriter(os.Stdout)
-		writer = &CsvWriter{
-			writer: csvWriter,
-		}
-	}
-	return writer, nil
-}
-
-func (w *CsvWriter) Write(record *soapforce.SObject) error {
-	values := []string{}
-	if record.Id != "" {
-		values = append(values, record.Id)
-	}
-	for _, v := range record.Fields {
-		values = append(values, v)
-	}
-	return w.writer.Write(values)
-}
-
-func (w *CsvWriter) Close() {
-	w.writer.Flush()
-	if w.fp != nil {
-		w.fp.Close()
-	}
-}
-
-func getWriter(cfg *config) (writer, error) {
-	switch cfg.Format {
-	case "csv":
-		return NewCsvWriter(cfg)
-	case "tsv":
-		return NewCsvWriter(cfg)
-	case "debug":
-		return &PPWriter{}, nil
-	default:
-		return NewCsvWriter(cfg)
-	}
-}
-
 func mapping(headers []string, cfg *config) ([]string, error) {
+	if cfg.Mapping == "" {
+		return nil, nil
+	}
 	mapping := map[string]string{}
 	buf, err := ioutil.ReadFile(cfg.Mapping)
 	if err != nil {

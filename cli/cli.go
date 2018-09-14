@@ -14,19 +14,21 @@ type CLI struct {
 }
 
 type config struct {
-	Username   string
-	Password   string
-	Endpoint   string
-	ApiVersion string
-	Query      string
-	Type       string
-	InputFile  string
-	Delimiter  string
-	Encoding   string
-	UpsertKey  string
-	Output     string
-	Format     string
-	Mapping    string
+	Username    string
+	Password    string
+	Endpoint    string
+	ApiVersion  string
+	Query       string
+	Type        string
+	InputFile   string
+	Delimiter   string
+	Encoding    string
+	UpsertKey   string
+	Output      string
+	Format      string
+	Mapping     string
+	ErrorPath   string
+	SuccessPath string
 }
 
 type Logger struct {
@@ -63,24 +65,24 @@ func (c *CLI) Run(args []string) error {
 		cli.StringFlag{
 			Name:        "username, u",
 			Destination: &c.Config.Username,
-			EnvVar:      "SF_USERNAME",
+			EnvVar:      "SALESFORCE_USERNAME",
 		},
 		cli.StringFlag{
 			Name:        "password, p",
 			Destination: &c.Config.Password,
-			EnvVar:      "SF_PASSWORD",
+			EnvVar:      "SALESFORCE_PASSWORD",
 		},
 		cli.StringFlag{
 			Name:        "endpoint, e",
 			Value:       "login.salesforce.com",
 			Destination: &c.Config.Endpoint,
-			EnvVar:      "SF_ENDPOINT",
+			EnvVar:      "SALESFORCE_ENDPOINT",
 		},
 		cli.StringFlag{
 			Name:        "apiversion",
 			Value:       DefaultApiVersion,
 			Destination: &c.Config.ApiVersion,
-			EnvVar:      "SF_APIVERSION",
+			EnvVar:      "SALESFORCE_APIVERSION",
 		},
 		cli.StringFlag{
 			Name:        "delimiter",
@@ -89,6 +91,7 @@ func (c *CLI) Run(args []string) error {
 		},
 		cli.StringFlag{
 			Name:        "encoding",
+			Value:       "utf8",
 			Destination: &c.Config.Encoding,
 		},
 		cli.StringFlag{
@@ -144,6 +147,16 @@ func (c *CLI) Run(args []string) error {
 						Name:        "type, t",
 						Destination: &c.Config.Type,
 					},
+					cli.StringFlag{
+						Name:        "successfile",
+						Value:       "./success.csv",
+						Destination: &c.Config.SuccessPath,
+					},
+					cli.StringFlag{
+						Name:        "errorfile",
+						Value:       "./error.csv",
+						Destination: &c.Config.ErrorPath,
+					},
 				},
 			),
 			Action: func(ctx *cli.Context) error {
@@ -190,7 +203,7 @@ func (c *CLI) Run(args []string) error {
 					cli.StringFlag{
 						Name:        "upsertkey, k",
 						Value:       "Id",
-						Destination: &c.Config.Type,
+						Destination: &c.Config.UpsertKey,
 					},
 				},
 			),
@@ -243,8 +256,7 @@ func (c *CLI) Run(args []string) error {
 			},
 		},
 	}
-	app.Run(args)
-	return nil
+	return app.Run(args)
 }
 
 func createCommandFlag(defaultFlags []cli.Flag, flags []cli.Flag) []cli.Flag {

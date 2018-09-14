@@ -27,11 +27,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:8a1f3fc75ff919b330377ae488619a6ad7822fc862cbec7915381b16f622e034"
+  digest = "1:13263653632443936da8428f9a5a151c27c65031937ef5d19ed6bc6260d05310"
   name = "github.com/tzmfreedom/go-soapforce"
   packages = ["."]
   pruneopts = "UT"
-  revision = "60a53506a499d349633783615d7a3c6432f8589b"
+  revision = "db6aee2ee86003ca514438e6d6bb040584974327"
 
 [[projects]]
   digest = "1:b24d38b282bacf9791408a080f606370efa3d364e4b5fd9ba0f7b87786d3b679"
@@ -49,6 +49,30 @@
   pruneopts = "UT"
   revision = "d0be0721c37eeb5299f245a996a483160fc36940"
 
+[[projects]]
+  digest = "1:5dff1a0d6e59c6ada3ab630d0926c4d7665a74a27c559e4001189ca2f5026d1c"
+  name = "golang.org/x/text"
+  packages = [
+    "encoding",
+    "encoding/internal",
+    "encoding/internal/identifier",
+    "encoding/japanese",
+    "internal/gen",
+    "transform",
+    "unicode/cldr",
+  ]
+  pruneopts = "UT"
+  revision = "f21a4dfb5e38f5895301dc265a8def02365cc3d0"
+  version = "v0.3.0"
+
+[[projects]]
+  digest = "1:342378ac4dcb378a5448dd723f0784ae519383532f5e70ade24132c4c8693202"
+  name = "gopkg.in/yaml.v2"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "5420a8b6744d3b0345ab293f6fcba19c978f1183"
+  version = "v2.2.1"
+
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
@@ -56,6 +80,9 @@
     "github.com/k0kubun/pp",
     "github.com/tzmfreedom/go-soapforce",
     "github.com/urfave/cli",
+    "golang.org/x/text/encoding/japanese",
+    "golang.org/x/text/transform",
+    "gopkg.in/yaml.v2",
   ]
   solver-name = "gps-cdcl"
   solver-version = 1

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/tzmfreedom/yasd/cli"
@@ -17,6 +18,7 @@ func main() {
 
 	statusCode := ExitCodeOK
 	if err != nil {
+		fmt.Println(err.Error())
 		statusCode = ExitCodeError
 	}
 	os.Exit(statusCode)
