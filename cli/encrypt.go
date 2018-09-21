@@ -44,41 +44,37 @@ func decrypt(b64EncodedCipherText string, key []byte) (string, error) {
 	return string(cipherText[aes.BlockSize:]), nil
 }
 
-func encryptCredential(cfg *config) (string, string, error) {
-	key, err := generateKey()
+func encryptCredential(cfg *config) (string, error) {
+	file, err := os.Open(cfg.EncyptionKeyPath)
 	if err != nil {
-		return "", "", err
+		return "", err
 	}
-	encryptedUsername, err := encrypt([]byte(cfg.Username), key)
-	if err != nil {
-		return "", "", err
+	key := make([]byte, 32)
+	if _, err = file.Read(key); err != nil {
+		return "", err
 	}
 	encryptedPassword, err := encrypt([]byte(cfg.Password), key)
 	if err != nil {
-		return "", "", err
+		return "", err
 	}
-	return encryptedUsername, encryptedPassword, nil
+	return encryptedPassword, nil
 }
 
-func decryptCredential(cfg *config) (string, string, error) {
+func decryptCredential(cfg *config) (string, error) {
 	file, err := os.Open(cfg.EncyptionKeyPath)
 	if err != nil {
-		return "", "", err
+		return "", err
 	}
 	key := make([]byte, 32)
 	_, err = file.Read(key)
 	if err != nil {
-		return "", "", err
-	}
-	username, err := decrypt(cfg.Username, key)
-	if err != nil {
-		return "", "", err
+		return "", err
 	}
 	password, err := decrypt(cfg.Password, key)
 	if err != nil {
-		return "", "", err
+		return "", err
 	}
-	return username, password, nil
+	return password, nil
 }
 
 func generateKey() ([]byte, error) {

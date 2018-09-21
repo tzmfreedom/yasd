@@ -2,7 +2,10 @@ package cli
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 
+	"github.com/mitchellh/go-homedir"
 	"github.com/tzmfreedom/go-soapforce"
 	"github.com/urfave/cli"
 )
@@ -58,6 +61,11 @@ func NewCli() *CLI {
 }
 
 func (c *CLI) Run(args []string) error {
+	defaultEncryptionKeyPath, err := defaultEncryptionKeyPath()
+	if err != nil {
+		return err
+	}
+
 	cli.VersionPrinter = func(c *cli.Context) {
 		fmt.Printf("version=%s revision=%s\n", c.App.Version, Revision)
 	}
@@ -264,6 +272,7 @@ func (c *CLI) Run(args []string) error {
 				[]cli.Flag{
 					cli.StringFlag{
 						Name:        "key",
+						Value:       defaultEncryptionKeyPath,
 						Destination: &c.Config.EncyptionKeyPath,
 					},
 				},
@@ -273,10 +282,60 @@ func (c *CLI) Run(args []string) error {
 				return executor.generateEncryptionKey(c.Config)
 			},
 		},
+		{
+			Name:  "decrypt-key",
+			Usage: "Descrypt AES Key",
+			Flags: createCommandFlag(
+				defaultFlags,
+				[]cli.Flag{
+					cli.StringFlag{
+						Name:        "key",
+						Destination: &c.Config.EncyptionKeyPath,
+					},
+				},
+			),
+			Action: func(ctx *cli.Context) error {
+				executor := NewCommandExecutor()
+				return executor.debug(c.Config)
+			},
+		},
 	}
 	return app.Run(args)
 }
 
 func createCommandFlag(defaultFlags []cli.Flag, flags []cli.Flag) []cli.Flag {
 	return append(defaultFlags, flags...)
+}
+
+func configDir() (string, error) {
+	home, err := homedir.Dir()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(home, ".config", "yasd"), nil
+}
+
+func defaultEncryptionKeyPath() (string, error) {
+	dir, err := configDir()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(dir, "key"), nil
+}
+
+func createEncryptionKeyFile(filename string) error {
+	dir, err := configDir()
+	if err != nil {
+		return err
+	}
+	if err = os.MkdirAll(dir, 0700); err != nil {
+		return err
+	}
+	configPath := filepath.Join(dir, filename)
+	if _, err := os.Stat(configPath); err != nil {
+		if err = generateEncryptionKey(configPath); err != nil {
+			return err
+		}
+	}
+	return nil
 }

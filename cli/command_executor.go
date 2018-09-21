@@ -334,6 +334,10 @@ func (c *CommandExecutor) generateEncryptionKey(cfg *config) error {
 	return err
 }
 
+func (c *CommandExecutor) debug(cfg *config) error {
+	return  nil
+}
+
 func getReader(cfg *config) (*csv.Reader, *os.File, error) {
 	fp, err := os.Open(cfg.InputFile)
 	if err != nil {
