@@ -49,18 +49,23 @@ $ yasd undelete -t {Salesforce Object Name} -f {path to source file} [--mapping 
 * --endpoint, -e
 
 * --api-version
+
   Specify Salesforce API Version (e.g. 43.0)
 
 * --delimiter
+
   Specify CSV delimiter
 
 * --encoding
+
   Specify CSV encoding, read/write
 
 * --mapping
+
   Specify CSV header mapping file path
 
 * --debug, -d
+
   If you set debug, cli output transmitting API SOAP XML to stdout.
 
 
