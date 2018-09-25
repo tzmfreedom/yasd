@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
@@ -8,6 +9,7 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 )
 
 func encrypt(plain []byte, key []byte) (string, error) {
@@ -15,66 +17,38 @@ func encrypt(plain []byte, key []byte) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	cipherText := make([]byte, aes.BlockSize+len(plain))
+
+	paddedPlain := padPKCS7(plain)
+	cipherText := make([]byte, aes.BlockSize+len(paddedPlain))
 	iv := cipherText[:aes.BlockSize]
 	if _, err := io.ReadFull(rand.Reader, iv); err != nil {
 		return "", err
 	}
 
 	encrypter := cipher.NewCBCEncrypter(block, iv)
-	encrypter.CryptBlocks(cipherText[aes.BlockSize:], plain)
+	encrypter.CryptBlocks(cipherText[aes.BlockSize:], paddedPlain)
 
 	sEnc := base64.StdEncoding.EncodeToString(cipherText)
 	return sEnc, nil
 }
 
 func decrypt(b64EncodedCipherText string, key []byte) (string, error) {
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		return "", err
+	}
+
 	cipherText, err := base64.StdEncoding.DecodeString(b64EncodedCipherText)
 	if err != nil {
 		return "", err
 	}
 
-	block, err := aes.NewCipher(key)
-	if err != nil {
-		return "", err
-	}
+	plain := make([]byte, len(cipherText))
 	decrypter := cipher.NewCBCDecrypter(block, cipherText[:aes.BlockSize])
-	decrypter.CryptBlocks(cipherText[aes.BlockSize:], cipherText)
+	decrypter.CryptBlocks(plain, cipherText[aes.BlockSize:])
+	padSize := int(plain[len(plain)-1])
 
-	return string(cipherText[aes.BlockSize:]), nil
-}
-
-func encryptCredential(cfg *config) (string, error) {
-	file, err := os.Open(cfg.EncyptionKeyPath)
-	if err != nil {
-		return "", err
-	}
-	key := make([]byte, 32)
-	if _, err = file.Read(key); err != nil {
-		return "", err
-	}
-	encryptedPassword, err := encrypt([]byte(cfg.Password), key)
-	if err != nil {
-		return "", err
-	}
-	return encryptedPassword, nil
-}
-
-func decryptCredential(cfg *config) (string, error) {
-	file, err := os.Open(cfg.EncyptionKeyPath)
-	if err != nil {
-		return "", err
-	}
-	key := make([]byte, 32)
-	_, err = file.Read(key)
-	if err != nil {
-		return "", err
-	}
-	password, err := decrypt(cfg.Password, key)
-	if err != nil {
-		return "", err
-	}
-	return password, nil
+	return string(plain[:len(plain)-padSize]), nil
 }
 
 func generateKey() ([]byte, error) {
@@ -85,11 +59,27 @@ func generateKey() ([]byte, error) {
 	return key, nil
 }
 
-func generateEncryptionKey(path string) error {
+func createEncryptionKeyFile(path string) error {
+	dir := filepath.Dir(path)
+	if _, err := os.Stat(dir); err != nil {
+		if err := os.MkdirAll(dir, 0700); err != nil {
+			return err
+		}
+	}
 	key, err := generateKey()
 	if err != nil {
 		return err
 	}
-	err = ioutil.WriteFile(path, key, 0600)
+	b64key := base64.StdEncoding.EncodeToString(key)
+	err = ioutil.WriteFile(path, []byte(b64key), 0600)
 	return err
+}
+
+func padPKCS7(data []byte) []byte {
+	padSize := 0
+	if len(data)%aes.BlockSize != 0 {
+		padSize = aes.BlockSize - len(data)%aes.BlockSize
+	}
+	appendChars := bytes.Repeat([]byte{byte(padSize)}, padSize)
+	return append(data, appendChars...)
 }

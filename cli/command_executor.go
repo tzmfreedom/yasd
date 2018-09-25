@@ -1,7 +1,9 @@
 package cli
 
 import (
+	"encoding/base64"
 	"encoding/csv"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
@@ -36,9 +38,17 @@ func (c *CommandExecutor) login(username string, password string) error {
 }
 
 func (c *CommandExecutor) query(cfg config) error {
+	if cfg.EncryptionKeyPath != "" {
+		password, err := c.decryptCredential(cfg)
+		if err != nil {
+			return err
+		}
+		cfg.Password = password
+	}
 	if err := c.login(cfg.Username, cfg.Password); err != nil {
 		return err
 	}
+
 	c.client.SetBatchSize(cfg.BatchSize)
 	res, err := c.client.Query(cfg.Query)
 	if err != nil {
@@ -65,6 +75,13 @@ func (c *CommandExecutor) query(cfg config) error {
 }
 
 func (c *CommandExecutor) insert(cfg config) error {
+	if cfg.EncryptionKeyPath != "" {
+		password, err := c.decryptCredential(cfg)
+		if err != nil {
+			return err
+		}
+		cfg.Password = password
+	}
 	if err := c.login(cfg.Username, cfg.Password); err != nil {
 		return err
 	}
@@ -119,6 +136,13 @@ func (c *CommandExecutor) insert(cfg config) error {
 }
 
 func (c *CommandExecutor) update(cfg config) error {
+	if cfg.EncryptionKeyPath != "" {
+		password, err := c.decryptCredential(cfg)
+		if err != nil {
+			return err
+		}
+		cfg.Password = password
+	}
 	if err := c.login(cfg.Username, cfg.Password); err != nil {
 		return err
 	}
@@ -173,6 +197,13 @@ func (c *CommandExecutor) update(cfg config) error {
 }
 
 func (c *CommandExecutor) upsert(cfg config) error {
+	if cfg.EncryptionKeyPath != "" {
+		password, err := c.decryptCredential(cfg)
+		if err != nil {
+			return err
+		}
+		cfg.Password = password
+	}
 	if err := c.login(cfg.Username, cfg.Password); err != nil {
 		return err
 	}
@@ -227,6 +258,13 @@ func (c *CommandExecutor) upsert(cfg config) error {
 }
 
 func (c *CommandExecutor) delete(cfg config) error {
+	if cfg.EncryptionKeyPath != "" {
+		password, err := c.decryptCredential(cfg)
+		if err != nil {
+			return err
+		}
+		cfg.Password = password
+	}
 	if err := c.login(cfg.Username, cfg.Password); err != nil {
 		return err
 	}
@@ -282,6 +320,13 @@ func (c *CommandExecutor) delete(cfg config) error {
 }
 
 func (c *CommandExecutor) undelete(cfg config) error {
+	if cfg.EncryptionKeyPath != "" {
+		password, err := c.decryptCredential(cfg)
+		if err != nil {
+			return err
+		}
+		cfg.Password = password
+	}
 	if err := c.login(cfg.Username, cfg.Password); err != nil {
 		return err
 	}
@@ -337,8 +382,51 @@ func (c *CommandExecutor) undelete(cfg config) error {
 }
 
 func (c *CommandExecutor) generateEncryptionKey(cfg config) error {
-	err := generateEncryptionKey(cfg.EncyptionKeyPath)
-	return err
+	if _, err := os.Stat(cfg.EncryptionKeyPath); err != nil {
+		err := createEncryptionKeyFile(cfg.EncryptionKeyPath)
+		if err == nil {
+			fmt.Printf("generate key on %s", cfg.EncryptionKeyPath)
+		}
+		return err
+	} else if cfg.UpdateKey {
+		err := createEncryptionKeyFile(cfg.EncryptionKeyPath)
+		if err == nil {
+			fmt.Printf("generate key on %s", cfg.EncryptionKeyPath)
+		}
+		return err
+	} else {
+		fmt.Printf("key is already exists on %s", cfg.EncryptionKeyPath)
+	}
+	return nil
+}
+
+func (c *CommandExecutor) encryptCredential(cfg config) error {
+	b64key, err := ioutil.ReadFile(cfg.EncryptionKeyPath)
+	if err != nil {
+		return err
+	}
+	key, err := base64.StdEncoding.DecodeString(string(b64key))
+	if err != nil {
+		return err
+	}
+	encryptedPassword, err := encrypt([]byte(cfg.Password), key)
+	if err != nil {
+		return err
+	}
+	fmt.Println(encryptedPassword)
+	return nil
+}
+
+func (c *CommandExecutor) decryptCredential(cfg config) (string, error) {
+	b64key, err := ioutil.ReadFile(cfg.EncryptionKeyPath)
+	if err != nil {
+		return "", err
+	}
+	key, err := base64.StdEncoding.DecodeString(string(b64key))
+	if err != nil {
+		return "", err
+	}
+	return decrypt(cfg.Password, key)
 }
 
 func (c *CommandExecutor) debug(cfg config) error {

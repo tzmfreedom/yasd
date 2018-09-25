@@ -14,25 +14,27 @@ type CLI struct {
 }
 
 type config struct {
-	Username         string
-	Password         string
-	Endpoint         string
-	ApiVersion       string
-	Query            string
-	Type             string
-	InputFile        string
-	Delimiter        string
-	Encoding         string
-	UpsertKey        string
-	Output           string
-	Format           string
-	Mapping          string
-	ErrorPath        string
-	SuccessPath      string
-	EncyptionKeyPath string
-	BatchSize        int
-	Debug            bool
-	InsertNulls      bool
+	Username          string
+	Password          string
+	Endpoint          string
+	ApiVersion        string
+	Query             string
+	Type              string
+	InputFile         string
+	Delimiter         string
+	Encoding          string
+	UpsertKey         string
+	Output            string
+	Format            string
+	Mapping           string
+	ErrorPath         string
+	SuccessPath       string
+	EncryptionKeyPath string
+	BatchSize         int
+	Debug             bool
+	InsertNulls       bool
+	UpdateKey         bool
+	ConfigFile        string
 }
 
 var (
@@ -42,7 +44,7 @@ var (
 
 const (
 	AppName = "yasd"
-	Usage   = ""
+	Usage   = "Yet Another Salesforce Dataloader"
 )
 
 const (
@@ -166,7 +168,7 @@ func (c *CLI) Run(args []string) error {
 		{
 			Name:  "undelete",
 			Usage: "Undelete SObject Record",
-			Flags:   c.defaultDmlFlags(),
+			Flags: c.defaultDmlFlags(),
 			Action: func(ctx *cli.Context) error {
 				executor := NewCommandExecutor(c.Config.Debug)
 				return executor.undelete(*c.Config)
@@ -180,7 +182,11 @@ func (c *CLI) Run(args []string) error {
 				cli.StringFlag{
 					Name:        "key",
 					Value:       defaultEncryptionKeyPath,
-					Destination: &c.Config.EncyptionKeyPath,
+					Destination: &c.Config.EncryptionKeyPath,
+				},
+				cli.BoolFlag{
+					Name:        "force-update",
+					Destination: &c.Config.UpdateKey,
 				},
 			),
 			Action: func(ctx *cli.Context) error {
@@ -189,30 +195,23 @@ func (c *CLI) Run(args []string) error {
 			},
 		},
 		{
-			Name:  "decrypt-key",
-			Usage: "Descrypt AES Key",
+			Name:  "encrypt",
+			Usage: "Encrypt password",
 			Flags: append(
 				c.defaultFlags(),
 				cli.StringFlag{
 					Name:        "key",
-					Destination: &c.Config.EncyptionKeyPath,
+					Value:       defaultEncryptionKeyPath,
+					Destination: &c.Config.EncryptionKeyPath,
 				},
 			),
 			Action: func(ctx *cli.Context) error {
 				executor := NewCommandExecutor(c.Config.Debug)
-				return executor.debug(*c.Config)
+				return executor.encryptCredential(*c.Config)
 			},
 		},
 	}
 	return app.Run(args)
-}
-
-func createCommandFlag(defaultFlags []cli.Flag, flags []cli.Flag) []cli.Flag {
-	return append(defaultFlags, flags...)
-}
-
-func (c *CLI) createDmlCommandFlag(defaultFlags []cli.Flag, flags []cli.Flag) []cli.Flag {
-	return nil
 }
 
 func (c *CLI) defaultFlags() []cli.Flag {
@@ -257,6 +256,10 @@ func (c *CLI) defaultFlags() []cli.Flag {
 			Name:        "debug, d",
 			Destination: &c.Config.Debug,
 		},
+		cli.StringFlag{
+			Name:        "config, c",
+			Destination: &c.Config.ConfigFile,
+		},
 	}
 }
 
@@ -292,27 +295,21 @@ func configDir() (string, error) {
 	return filepath.Join(home, ".config", "yasd"), nil
 }
 
+func createConfigDir() (string, error) {
+	dir, err := configDir()
+	if err != nil {
+		return "", err
+	}
+	if err = os.MkdirAll(dir, 0700); err != nil {
+		return "", err
+	}
+	return dir, nil
+}
+
 func defaultEncryptionKeyPath() (string, error) {
 	dir, err := configDir()
 	if err != nil {
 		return "", err
 	}
 	return filepath.Join(dir, "key"), nil
-}
-
-func createEncryptionKeyFile(filename string) error {
-	dir, err := configDir()
-	if err != nil {
-		return err
-	}
-	if err = os.MkdirAll(dir, 0700); err != nil {
-		return err
-	}
-	configPath := filepath.Join(dir, filename)
-	if _, err := os.Stat(configPath); err != nil {
-		if err = generateEncryptionKey(configPath); err != nil {
-			return err
-		}
-	}
-	return nil
 }
