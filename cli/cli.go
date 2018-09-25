@@ -66,7 +66,161 @@ func (c *CLI) Run(args []string) error {
 		fmt.Printf("version=%s revision=%s\n", c.App.Version, Revision)
 	}
 
-	defaultFlags := []cli.Flag{
+
+	app := cli.NewApp()
+	app.Name = AppName
+	app.Usage = Usage
+	app.Version = Version
+
+	defaultFlags := c.defaultFlags()
+	defaultDmlFlags := c.defaultDmlFlags()
+
+	app.Commands = []cli.Command{
+		{
+			Name:    "export",
+			Aliases: []string{"e"},
+			Usage:   "Export SObject Record",
+			Flags: append(
+				defaultDmlFlags,
+				cli.StringFlag{
+					Name:        "query, q",
+					Destination: &c.Config.Query,
+				},
+				cli.StringFlag{
+					Name:        "output, o",
+					Destination: &c.Config.Output,
+				},
+				cli.StringFlag{
+					Name:        "format",
+					Destination: &c.Config.Format,
+				},
+				cli.IntFlag{
+					Name:        "batch-size",
+					Value:       500,
+					Destination: &c.Config.BatchSize,
+				},
+			),
+			Action: func(ctx *cli.Context) error {
+				executor := NewCommandExecutor(c.Config.Debug)
+				return executor.query(*c.Config)
+			},
+		},
+		{
+			Name:    "insert",
+			Aliases: []string{"i"},
+			Usage:   "Insert SObject Record",
+			Flags: append(
+				defaultDmlFlags,
+				cli.BoolFlag {
+					Name:        "insert-nulls",
+					Destination: &c.Config.InsertNulls,
+				},
+			),
+			Action: func(ctx *cli.Context) error {
+				executor := NewCommandExecutor(c.Config.Debug)
+				return executor.insert(*c.Config)
+			},
+		},
+		{
+			Name:    "update",
+			Aliases: []string{"u"},
+			Usage:   "Update SObject Record",
+			Flags: append(
+				defaultDmlFlags,
+				cli.BoolFlag {
+					Name:        "insert-nulls",
+					Destination: &c.Config.InsertNulls,
+				},
+			),
+			Action: func(ctx *cli.Context) error {
+				executor := NewCommandExecutor(c.Config.Debug)
+				return executor.update(*c.Config)
+			},
+		},
+		{
+			Name:  "upsert",
+			Usage: "Upsert SObject Record",
+			Flags: append(
+				defaultDmlFlags,
+				cli.StringFlag{
+					Name:        "upsert-key, k",
+					Value:       "Id",
+					Destination: &c.Config.UpsertKey,
+				},
+				cli.BoolFlag {
+					Name:        "insert-nulls",
+					Destination: &c.Config.InsertNulls,
+				},
+			),
+			Action: func(ctx *cli.Context) error {
+				executor := NewCommandExecutor(c.Config.Debug)
+				return executor.upsert(*c.Config)
+			},
+		},
+		{
+			Name:    "delete",
+			Aliases: []string{"d"},
+			Usage:   "Delete SObject Record",
+			Flags: defaultDmlFlags,
+			Action: func(ctx *cli.Context) error {
+				executor := NewCommandExecutor(c.Config.Debug)
+				return executor.delete(*c.Config)
+			},
+		},
+		{
+			Name:  "undelete",
+			Usage: "Undelete SObject Record",
+			Flags: defaultDmlFlags,
+			Action: func(ctx *cli.Context) error {
+				executor := NewCommandExecutor(c.Config.Debug)
+				return executor.undelete(*c.Config)
+			},
+		},
+		{
+			Name:  "generate-key",
+			Usage: "Generate AES Key",
+			Flags: append(
+				defaultFlags,
+				cli.StringFlag{
+					Name:        "key",
+					Value:       defaultEncryptionKeyPath,
+					Destination: &c.Config.EncyptionKeyPath,
+				},
+			),
+			Action: func(ctx *cli.Context) error {
+				executor := NewCommandExecutor(c.Config.Debug)
+				return executor.generateEncryptionKey(*c.Config)
+			},
+		},
+		{
+			Name:  "decrypt-key",
+			Usage: "Descrypt AES Key",
+			Flags: append(
+				defaultFlags,
+				cli.StringFlag{
+					Name:        "key",
+					Destination: &c.Config.EncyptionKeyPath,
+				},
+			),
+			Action: func(ctx *cli.Context) error {
+				executor := NewCommandExecutor(c.Config.Debug)
+				return executor.debug(*c.Config)
+			},
+		},
+	}
+	return app.Run(args)
+}
+
+func createCommandFlag(defaultFlags []cli.Flag, flags []cli.Flag) []cli.Flag {
+	return append(defaultFlags, flags...)
+}
+
+func (c *CLI) createDmlCommandFlag(defaultFlags []cli.Flag, flags []cli.Flag) []cli.Flag {
+	return nil
+}
+
+func (c *CLI) defaultFlags() []cli.Flag {
+	return []cli.Flag{
 		cli.StringFlag{
 			Name:        "username, u",
 			Destination: &c.Config.Username,
@@ -84,7 +238,7 @@ func (c *CLI) Run(args []string) error {
 			EnvVar:      "SALESFORCE_ENDPOINT",
 		},
 		cli.StringFlag{
-			Name:        "apiversion",
+			Name:        "api-version",
 			Value:       DefaultApiVersion,
 			Destination: &c.Config.ApiVersion,
 			EnvVar:      "SALESFORCE_APIVERSION",
@@ -108,216 +262,30 @@ func (c *CLI) Run(args []string) error {
 			Destination: &c.Config.Debug,
 		},
 	}
-
-	app := cli.NewApp()
-	app.Name = AppName
-	app.Usage = Usage
-	app.Version = Version
-
-	app.Commands = []cli.Command{
-		{
-			Name:    "export",
-			Aliases: []string{"e"},
-			Usage:   "Export SObject Record",
-			Flags: createCommandFlag(
-				defaultFlags,
-				[]cli.Flag{
-					cli.StringFlag{
-						Name:        "query, q",
-						Destination: &c.Config.Query,
-					},
-					cli.StringFlag{
-						Name:        "output, o",
-						Destination: &c.Config.Output,
-					},
-					cli.StringFlag{
-						Name:        "format",
-						Destination: &c.Config.Format,
-					},
-					cli.IntFlag{
-						Name:        "batch-size",
-						Value:       500,
-						Destination: &c.Config.BatchSize,
-					},
-				},
-			),
-			Action: func(ctx *cli.Context) error {
-				executor := NewCommandExecutor(c.Config.Debug)
-				return executor.query(*c.Config)
-			},
-		},
-		{
-			Name:    "insert",
-			Aliases: []string{"i"},
-			Usage:   "Insert SObject Record",
-			Flags: createCommandFlag(
-				defaultFlags,
-				[]cli.Flag{
-					cli.StringFlag{
-						Name:        "file, f",
-						Destination: &c.Config.InputFile,
-					},
-					cli.StringFlag{
-						Name:        "type, t",
-						Destination: &c.Config.Type,
-					},
-					cli.StringFlag{
-						Name:        "successfile",
-						Value:       "./success.csv",
-						Destination: &c.Config.SuccessPath,
-					},
-					cli.StringFlag{
-						Name:        "errorfile",
-						Value:       "./error.csv",
-						Destination: &c.Config.ErrorPath,
-					},
-				},
-			),
-			Action: func(ctx *cli.Context) error {
-				executor := NewCommandExecutor(c.Config.Debug)
-				return executor.insert(*c.Config)
-			},
-		},
-		{
-			Name:    "update",
-			Aliases: []string{"u"},
-			Usage:   "Update SObject Record",
-			Flags: createCommandFlag(
-				defaultFlags,
-				[]cli.Flag{
-					cli.StringFlag{
-						Name:        "file, f",
-						Destination: &c.Config.InputFile,
-					},
-					cli.StringFlag{
-						Name:        "type, t",
-						Destination: &c.Config.Type,
-					},
-					cli.BoolFlag {
-						Name:        "insert-nulls",
-						Destination: &c.Config.InsertNulls,
-					},
-				},
-			),
-			Action: func(ctx *cli.Context) error {
-				executor := NewCommandExecutor(c.Config.Debug)
-				return executor.update(*c.Config)
-			},
-		},
-		{
-			Name:  "upsert",
-			Usage: "Upsert SObject Record",
-			Flags: createCommandFlag(
-				defaultFlags,
-				[]cli.Flag{
-					cli.StringFlag{
-						Name:        "file, f",
-						Destination: &c.Config.InputFile,
-					},
-					cli.StringFlag{
-						Name:        "type, t",
-						Destination: &c.Config.Type,
-					},
-					cli.StringFlag{
-						Name:        "upsertkey, k",
-						Value:       "Id",
-						Destination: &c.Config.UpsertKey,
-					},
-					cli.BoolFlag {
-						Name:        "insert-nulls",
-						Destination: &c.Config.InsertNulls,
-					},
-				},
-			),
-			Action: func(ctx *cli.Context) error {
-				executor := NewCommandExecutor(c.Config.Debug)
-				return executor.upsert(*c.Config)
-			},
-		},
-		{
-			Name:    "delete",
-			Aliases: []string{"d"},
-			Usage:   "Delete SObject Record",
-			Flags: createCommandFlag(
-				defaultFlags,
-				[]cli.Flag{
-					cli.StringFlag{
-						Name:        "file, f",
-						Destination: &c.Config.InputFile,
-					},
-					cli.StringFlag{
-						Name:        "type, t",
-						Destination: &c.Config.Type,
-					},
-				},
-			),
-			Action: func(ctx *cli.Context) error {
-				executor := NewCommandExecutor(c.Config.Debug)
-				return executor.delete(*c.Config)
-			},
-		},
-		{
-			Name:  "undelete",
-			Usage: "Undelete SObject Record",
-			Flags: createCommandFlag(
-				defaultFlags,
-				[]cli.Flag{
-					cli.StringFlag{
-						Name:        "file, f",
-						Destination: &c.Config.InputFile,
-					},
-					cli.StringFlag{
-						Name:        "type, t",
-						Destination: &c.Config.Type,
-					},
-				},
-			),
-			Action: func(ctx *cli.Context) error {
-				executor := NewCommandExecutor(c.Config.Debug)
-				return executor.undelete(*c.Config)
-			},
-		},
-		{
-			Name:  "generate-key",
-			Usage: "Generate AES Key",
-			Flags: createCommandFlag(
-				defaultFlags,
-				[]cli.Flag{
-					cli.StringFlag{
-						Name:        "key",
-						Value:       defaultEncryptionKeyPath,
-						Destination: &c.Config.EncyptionKeyPath,
-					},
-				},
-			),
-			Action: func(ctx *cli.Context) error {
-				executor := NewCommandExecutor(c.Config.Debug)
-				return executor.generateEncryptionKey(*c.Config)
-			},
-		},
-		{
-			Name:  "decrypt-key",
-			Usage: "Descrypt AES Key",
-			Flags: createCommandFlag(
-				defaultFlags,
-				[]cli.Flag{
-					cli.StringFlag{
-						Name:        "key",
-						Destination: &c.Config.EncyptionKeyPath,
-					},
-				},
-			),
-			Action: func(ctx *cli.Context) error {
-				executor := NewCommandExecutor(c.Config.Debug)
-				return executor.debug(*c.Config)
-			},
-		},
-	}
-	return app.Run(args)
 }
 
-func createCommandFlag(defaultFlags []cli.Flag, flags []cli.Flag) []cli.Flag {
-	return append(defaultFlags, flags...)
+func (c *CLI) defaultDmlFlags() []cli.Flag {
+	return append(
+		c.defaultFlags(),
+		cli.StringFlag{
+			Name:        "file, f",
+			Destination: &c.Config.InputFile,
+		},
+		cli.StringFlag{
+			Name:        "type, t",
+			Destination: &c.Config.Type,
+		},
+		cli.StringFlag{
+			Name:        "success-file",
+			Value:       "./success.csv",
+			Destination: &c.Config.SuccessPath,
+		},
+		cli.StringFlag{
+			Name:        "error-file",
+			Value:       "./error.csv",
+			Destination: &c.Config.ErrorPath,
+		},
+	)
 }
 
 func configDir() (string, error) {
