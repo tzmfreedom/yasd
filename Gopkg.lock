@@ -26,12 +26,20 @@
   version = "v0.0.4"
 
 [[projects]]
+  digest = "1:78bbb1ba5b7c3f2ed0ea1eab57bdd3859aec7e177811563edc41198a760b06af"
+  name = "github.com/mitchellh/go-homedir"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "ae18d6b8b3205b561c79e8e5f69bff09736185f4"
+  version = "v1.0.0"
+
+[[projects]]
   branch = "master"
-  digest = "1:13263653632443936da8428f9a5a151c27c65031937ef5d19ed6bc6260d05310"
+  digest = "1:b79b6cb1ff183e3989eacbbd37016225043f1746f5d00a3fe0ae999622fe3246"
   name = "github.com/tzmfreedom/go-soapforce"
   packages = ["."]
   pruneopts = "UT"
-  revision = "db6aee2ee86003ca514438e6d6bb040584974327"
+  revision = "aeb0c013a4ffcca3c97502167264d9109353fe54"
 
 [[projects]]
   digest = "1:b24d38b282bacf9791408a080f606370efa3d364e4b5fd9ba0f7b87786d3b679"
@@ -43,11 +51,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:6eb2645d74b43d9c87b51947df39f7c668a4f422cd512053f7f6f75bfaad0197"
+  digest = "1:4c18b929ff2f30ebf16c43fd9e0755fad03b290af199c5bcd82dde4c80cf8781"
   name = "golang.org/x/sys"
   packages = ["unix"]
   pruneopts = "UT"
-  revision = "d0be0721c37eeb5299f245a996a483160fc36940"
+  revision = "90868a75fefd03942536221d7c0e2f84ec62a668"
 
 [[projects]]
   digest = "1:5dff1a0d6e59c6ada3ab630d0926c4d7665a74a27c559e4001189ca2f5026d1c"
@@ -78,6 +86,7 @@
   analyzer-version = 1
   input-imports = [
     "github.com/k0kubun/pp",
+    "github.com/mitchellh/go-homedir",
     "github.com/tzmfreedom/go-soapforce",
     "github.com/urfave/cli",
     "golang.org/x/text/encoding/japanese",

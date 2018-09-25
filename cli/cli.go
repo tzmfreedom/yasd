@@ -6,14 +6,11 @@ import (
 	"path/filepath"
 
 	"github.com/mitchellh/go-homedir"
-	"github.com/tzmfreedom/go-soapforce"
 	"github.com/urfave/cli"
 )
 
 type CLI struct {
 	Config *config
-	logger Logger
-	client *soapforce.Client
 }
 
 type config struct {
@@ -33,9 +30,9 @@ type config struct {
 	ErrorPath        string
 	SuccessPath      string
 	EncyptionKeyPath string
-}
-
-type Logger struct {
+	BatchSize        int
+	Debug            bool
+	InsertNulls      bool
 }
 
 var (
@@ -54,7 +51,6 @@ const (
 
 func NewCli() *CLI {
 	c := &CLI{
-		client: soapforce.NewClient(),
 		Config: &config{},
 	}
 	return c
@@ -107,6 +103,10 @@ func (c *CLI) Run(args []string) error {
 			Name:        "mapping",
 			Destination: &c.Config.Mapping,
 		},
+		cli.BoolFlag{
+			Name:        "debug, d",
+			Destination: &c.Config.Debug,
+		},
 	}
 
 	app := cli.NewApp()
@@ -134,11 +134,16 @@ func (c *CLI) Run(args []string) error {
 						Name:        "format",
 						Destination: &c.Config.Format,
 					},
+					cli.IntFlag{
+						Name:        "batch-size",
+						Value:       500,
+						Destination: &c.Config.BatchSize,
+					},
 				},
 			),
 			Action: func(ctx *cli.Context) error {
-				executor := NewCommandExecutor()
-				return executor.query(c.Config)
+				executor := NewCommandExecutor(c.Config.Debug)
+				return executor.query(*c.Config)
 			},
 		},
 		{
@@ -169,8 +174,8 @@ func (c *CLI) Run(args []string) error {
 				},
 			),
 			Action: func(ctx *cli.Context) error {
-				executor := NewCommandExecutor()
-				return executor.insert(c.Config)
+				executor := NewCommandExecutor(c.Config.Debug)
+				return executor.insert(*c.Config)
 			},
 		},
 		{
@@ -188,11 +193,15 @@ func (c *CLI) Run(args []string) error {
 						Name:        "type, t",
 						Destination: &c.Config.Type,
 					},
+					cli.BoolFlag {
+						Name:        "insert-nulls",
+						Destination: &c.Config.InsertNulls,
+					},
 				},
 			),
 			Action: func(ctx *cli.Context) error {
-				executor := NewCommandExecutor()
-				return executor.update(c.Config)
+				executor := NewCommandExecutor(c.Config.Debug)
+				return executor.update(*c.Config)
 			},
 		},
 		{
@@ -214,11 +223,15 @@ func (c *CLI) Run(args []string) error {
 						Value:       "Id",
 						Destination: &c.Config.UpsertKey,
 					},
+					cli.BoolFlag {
+						Name:        "insert-nulls",
+						Destination: &c.Config.InsertNulls,
+					},
 				},
 			),
 			Action: func(ctx *cli.Context) error {
-				executor := NewCommandExecutor()
-				return executor.upsert(c.Config)
+				executor := NewCommandExecutor(c.Config.Debug)
+				return executor.upsert(*c.Config)
 			},
 		},
 		{
@@ -229,7 +242,7 @@ func (c *CLI) Run(args []string) error {
 				defaultFlags,
 				[]cli.Flag{
 					cli.StringFlag{
-						Name:        "file",
+						Name:        "file, f",
 						Destination: &c.Config.InputFile,
 					},
 					cli.StringFlag{
@@ -239,8 +252,8 @@ func (c *CLI) Run(args []string) error {
 				},
 			),
 			Action: func(ctx *cli.Context) error {
-				executor := NewCommandExecutor()
-				return executor.delete(c.Config)
+				executor := NewCommandExecutor(c.Config.Debug)
+				return executor.delete(*c.Config)
 			},
 		},
 		{
@@ -250,7 +263,7 @@ func (c *CLI) Run(args []string) error {
 				defaultFlags,
 				[]cli.Flag{
 					cli.StringFlag{
-						Name:        "file",
+						Name:        "file, f",
 						Destination: &c.Config.InputFile,
 					},
 					cli.StringFlag{
@@ -260,8 +273,8 @@ func (c *CLI) Run(args []string) error {
 				},
 			),
 			Action: func(ctx *cli.Context) error {
-				executor := NewCommandExecutor()
-				return executor.undelete(c.Config)
+				executor := NewCommandExecutor(c.Config.Debug)
+				return executor.undelete(*c.Config)
 			},
 		},
 		{
@@ -278,8 +291,8 @@ func (c *CLI) Run(args []string) error {
 				},
 			),
 			Action: func(ctx *cli.Context) error {
-				executor := NewCommandExecutor()
-				return executor.generateEncryptionKey(c.Config)
+				executor := NewCommandExecutor(c.Config.Debug)
+				return executor.generateEncryptionKey(*c.Config)
 			},
 		},
 		{
@@ -295,8 +308,8 @@ func (c *CLI) Run(args []string) error {
 				},
 			),
 			Action: func(ctx *cli.Context) error {
-				executor := NewCommandExecutor()
-				return executor.debug(c.Config)
+				executor := NewCommandExecutor(c.Config.Debug)
+				return executor.debug(*c.Config)
 			},
 		},
 	}

@@ -16,7 +16,7 @@ type responseHandler interface {
 	HandleUndelete(results []*soapforce.UndeleteResult) error
 }
 
-func getResponseHandler(cfg *config) (responseHandler, error) {
+func getResponseHandler(cfg config) (responseHandler, error) {
 	h, err := NewResponseWriteHandler(cfg)
 	return h, err
 }
@@ -26,7 +26,7 @@ type ResponseWriteHandler struct {
 	errorWriter   *csv.Writer
 }
 
-func NewResponseWriteHandler(cfg *config) (*ResponseWriteHandler, error) {
+func NewResponseWriteHandler(cfg config) (*ResponseWriteHandler, error) {
 	successWriter, err := createCsvWriter(cfg.SuccessPath)
 	if err != nil {
 		return nil, err

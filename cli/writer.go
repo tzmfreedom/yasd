@@ -29,7 +29,7 @@ type CsvWriter struct {
 	fp     *os.File
 }
 
-func NewCsvWriter(cfg *config) (*CsvWriter, error) {
+func NewCsvWriter(cfg config) (*CsvWriter, error) {
 	var csvWriter *csv.Writer
 	var writer *CsvWriter
 	if cfg.Output != "" {
@@ -69,7 +69,7 @@ func (w *CsvWriter) Close() {
 	}
 }
 
-func getWriter(cfg *config) (writer, error) {
+func getWriter(cfg config) (writer, error) {
 	switch cfg.Format {
 	case "csv":
 		return NewCsvWriter(cfg)

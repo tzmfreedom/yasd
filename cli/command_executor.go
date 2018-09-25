@@ -17,17 +17,29 @@ type CommandExecutor struct {
 	client *soapforce.Client
 }
 
-func NewCommandExecutor() *CommandExecutor {
+func NewCommandExecutor(debug bool) *CommandExecutor {
+	client := soapforce.NewClient()
+	client.SetDebug(debug)
+
 	return &CommandExecutor{
-		client: soapforce.NewClient(),
+		client: client,
 	}
 }
 
-func (c *CommandExecutor) query(cfg *config) error {
-	_, err := c.client.Login(cfg.Username, cfg.Password)
+func (c *CommandExecutor) login(username string, password string) error {
+	_, err := c.client.Login(username, password)
 	if err != nil {
 		return err
 	}
+
+	return nil
+}
+
+func (c *CommandExecutor) query(cfg config) error {
+	if err := c.login(cfg.Username, cfg.Password); err != nil {
+		return err
+	}
+	c.client.SetBatchSize(cfg.BatchSize)
 	res, err := c.client.Query(cfg.Query)
 	if err != nil {
 		return err
@@ -52,9 +64,8 @@ func (c *CommandExecutor) query(cfg *config) error {
 	return nil
 }
 
-func (c *CommandExecutor) insert(cfg *config) error {
-	_, err := c.client.Login(cfg.Username, cfg.Password)
-	if err != nil {
+func (c *CommandExecutor) insert(cfg config) error {
+	if err := c.login(cfg.Username, cfg.Password); err != nil {
 		return err
 	}
 
@@ -85,7 +96,7 @@ func (c *CommandExecutor) insert(cfg *config) error {
 		if err != nil {
 			return err
 		}
-		sobject := createSObject(cfg.Type, headers, fields)
+		sobject := createInsertSObject(cfg.Type, headers, fields, cfg.InsertNulls)
 		sobjects = append(sobjects, sobject)
 		if len(sobjects) == 200 {
 			res, err := c.client.Create(sobjects)
@@ -107,9 +118,8 @@ func (c *CommandExecutor) insert(cfg *config) error {
 	return err
 }
 
-func (c *CommandExecutor) update(cfg *config) error {
-	_, err := c.client.Login(cfg.Username, cfg.Password)
-	if err != nil {
+func (c *CommandExecutor) update(cfg config) error {
+	if err := c.login(cfg.Username, cfg.Password); err != nil {
 		return err
 	}
 
@@ -140,7 +150,7 @@ func (c *CommandExecutor) update(cfg *config) error {
 		if err != nil {
 			return err
 		}
-		sobject := createSObject(cfg.Type, headers, fields)
+		sobject := createSObject(cfg.Type, headers, fields, cfg.InsertNulls)
 		sobjects = append(sobjects, sobject)
 		if len(sobjects) == 200 {
 			res, err := c.client.Update(sobjects)
@@ -162,9 +172,8 @@ func (c *CommandExecutor) update(cfg *config) error {
 	return err
 }
 
-func (c *CommandExecutor) upsert(cfg *config) error {
-	_, err := c.client.Login(cfg.Username, cfg.Password)
-	if err != nil {
+func (c *CommandExecutor) upsert(cfg config) error {
+	if err := c.login(cfg.Username, cfg.Password); err != nil {
 		return err
 	}
 
@@ -195,7 +204,7 @@ func (c *CommandExecutor) upsert(cfg *config) error {
 		if err != nil {
 			return err
 		}
-		sobject := createSObject(cfg.Type, headers, fields)
+		sobject := createSObject(cfg.Type, headers, fields, cfg.InsertNulls)
 		sobjects = append(sobjects, sobject)
 		if len(sobjects) == 200 {
 			res, err := c.client.Upsert(sobjects, cfg.UpsertKey)
@@ -217,9 +226,8 @@ func (c *CommandExecutor) upsert(cfg *config) error {
 	return err
 }
 
-func (c *CommandExecutor) delete(cfg *config) error {
-	_, err := c.client.Login(cfg.Username, cfg.Password)
-	if err != nil {
+func (c *CommandExecutor) delete(cfg config) error {
+	if err := c.login(cfg.Username, cfg.Password); err != nil {
 		return err
 	}
 
@@ -273,9 +281,8 @@ func (c *CommandExecutor) delete(cfg *config) error {
 	return err
 }
 
-func (c *CommandExecutor) undelete(cfg *config) error {
-	_, err := c.client.Login(cfg.Username, cfg.Password)
-	if err != nil {
+func (c *CommandExecutor) undelete(cfg config) error {
+	if err := c.login(cfg.Username, cfg.Password); err != nil {
 		return err
 	}
 
@@ -329,16 +336,16 @@ func (c *CommandExecutor) undelete(cfg *config) error {
 	return err
 }
 
-func (c *CommandExecutor) generateEncryptionKey(cfg *config) error {
+func (c *CommandExecutor) generateEncryptionKey(cfg config) error {
 	err := generateEncryptionKey(cfg.EncyptionKeyPath)
 	return err
 }
 
-func (c *CommandExecutor) debug(cfg *config) error {
-	return  nil
+func (c *CommandExecutor) debug(cfg config) error {
+	return nil
 }
 
-func getReader(cfg *config) (*csv.Reader, *os.File, error) {
+func getReader(cfg config) (*csv.Reader, *os.File, error) {
 	fp, err := os.Open(cfg.InputFile)
 	if err != nil {
 		return nil, nil, err
@@ -366,24 +373,49 @@ func getId(headers []string, f []string) string {
 	return ""
 }
 
-func createSObject(sObjectType string, headers []string, f []string) *soapforce.SObject {
+func createSObject(sObjectType string, headers []string, f []string, insertNulls bool) *soapforce.SObject {
 	fields := map[string]string{}
 	sobject := &soapforce.SObject{
 		Type:   sObjectType,
 		Fields: fields,
 	}
+	fieldsToNull := []string{}
 	for i, header := range headers {
 		if header == "Id" {
 			sobject.Id = f[i]
+		} else if insertNulls && f[i] == "" {
+			fieldsToNull = append(fieldsToNull, header)
+		} else {
+			fields[header] = f[i]
 		}
-		fields[header] = f[i]
 	}
+	sobject.FieldsToNull = fieldsToNull
 	return sobject
 }
 
-func mapping(headers []string, cfg *config) ([]string, error) {
+func createInsertSObject(sObjectType string, headers []string, f []string, insertNulls bool) *soapforce.SObject {
+	fields := map[string]string{}
+	sobject := &soapforce.SObject{
+		Type:   sObjectType,
+		Fields: fields,
+	}
+	fieldsToNull := []string{}
+	for i, header := range headers {
+		if header != "Id" {
+			if insertNulls && f[i] == "" {
+				fieldsToNull = append(fieldsToNull, header)
+			} else {
+				fields[header] = f[i]
+			}
+		}
+	}
+	sobject.FieldsToNull = fieldsToNull
+	return sobject
+}
+
+func mapping(headers []string, cfg config) ([]string, error) {
 	if cfg.Mapping == "" {
-		return nil, nil
+		return headers, nil
 	}
 	mapping := map[string]string{}
 	buf, err := ioutil.ReadFile(cfg.Mapping)
