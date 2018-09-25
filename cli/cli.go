@@ -66,14 +66,10 @@ func (c *CLI) Run(args []string) error {
 		fmt.Printf("version=%s revision=%s\n", c.App.Version, Revision)
 	}
 
-
 	app := cli.NewApp()
 	app.Name = AppName
 	app.Usage = Usage
 	app.Version = Version
-
-	defaultFlags := c.defaultFlags()
-	defaultDmlFlags := c.defaultDmlFlags()
 
 	app.Commands = []cli.Command{
 		{
@@ -81,7 +77,7 @@ func (c *CLI) Run(args []string) error {
 			Aliases: []string{"e"},
 			Usage:   "Export SObject Record",
 			Flags: append(
-				defaultDmlFlags,
+				c.defaultFlags(),
 				cli.StringFlag{
 					Name:        "query, q",
 					Destination: &c.Config.Query,
@@ -110,8 +106,8 @@ func (c *CLI) Run(args []string) error {
 			Aliases: []string{"i"},
 			Usage:   "Insert SObject Record",
 			Flags: append(
-				defaultDmlFlags,
-				cli.BoolFlag {
+				c.defaultDmlFlags(),
+				cli.BoolFlag{
 					Name:        "insert-nulls",
 					Destination: &c.Config.InsertNulls,
 				},
@@ -126,8 +122,8 @@ func (c *CLI) Run(args []string) error {
 			Aliases: []string{"u"},
 			Usage:   "Update SObject Record",
 			Flags: append(
-				defaultDmlFlags,
-				cli.BoolFlag {
+				c.defaultDmlFlags(),
+				cli.BoolFlag{
 					Name:        "insert-nulls",
 					Destination: &c.Config.InsertNulls,
 				},
@@ -141,13 +137,13 @@ func (c *CLI) Run(args []string) error {
 			Name:  "upsert",
 			Usage: "Upsert SObject Record",
 			Flags: append(
-				defaultDmlFlags,
+				c.defaultDmlFlags(),
 				cli.StringFlag{
 					Name:        "upsert-key, k",
 					Value:       "Id",
 					Destination: &c.Config.UpsertKey,
 				},
-				cli.BoolFlag {
+				cli.BoolFlag{
 					Name:        "insert-nulls",
 					Destination: &c.Config.InsertNulls,
 				},
@@ -161,7 +157,7 @@ func (c *CLI) Run(args []string) error {
 			Name:    "delete",
 			Aliases: []string{"d"},
 			Usage:   "Delete SObject Record",
-			Flags: defaultDmlFlags,
+			Flags:   c.defaultDmlFlags(),
 			Action: func(ctx *cli.Context) error {
 				executor := NewCommandExecutor(c.Config.Debug)
 				return executor.delete(*c.Config)
@@ -170,7 +166,7 @@ func (c *CLI) Run(args []string) error {
 		{
 			Name:  "undelete",
 			Usage: "Undelete SObject Record",
-			Flags: defaultDmlFlags,
+			Flags:   c.defaultDmlFlags(),
 			Action: func(ctx *cli.Context) error {
 				executor := NewCommandExecutor(c.Config.Debug)
 				return executor.undelete(*c.Config)
@@ -180,7 +176,7 @@ func (c *CLI) Run(args []string) error {
 			Name:  "generate-key",
 			Usage: "Generate AES Key",
 			Flags: append(
-				defaultFlags,
+				c.defaultFlags(),
 				cli.StringFlag{
 					Name:        "key",
 					Value:       defaultEncryptionKeyPath,
@@ -196,7 +192,7 @@ func (c *CLI) Run(args []string) error {
 			Name:  "decrypt-key",
 			Usage: "Descrypt AES Key",
 			Flags: append(
-				defaultFlags,
+				c.defaultFlags(),
 				cli.StringFlag{
 					Name:        "key",
 					Destination: &c.Config.EncyptionKeyPath,
