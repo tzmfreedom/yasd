@@ -6,6 +6,17 @@ Yet Another Salesforce Dataloader
 
 ## Install
 
+For Windows user
+```powershell
+(New-Object Net.WebClient).DownloadString('http://install.freedom-man.com/yasd-win') | iex
+```
+
+For Linux, MacOS user
+```bash
+$ curl -sL http://install.freedom-man.com/yasd | bash
+```
+
+For golang user
 ```bash
 $ go get github.com/tzmfreedom/yasd
 ```
