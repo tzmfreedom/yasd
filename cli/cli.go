@@ -40,11 +40,8 @@ var (
 )
 
 const (
-	AppName = "yasd"
-	Usage   = "Yet Another Salesforce Dataloader"
-)
-
-const (
+	AppName           = "yasd"
+	Usage             = "Yet Another Salesforce Dataloader"
 	DefaultApiVersion = "38.0"
 )
 
@@ -171,10 +168,6 @@ func (c *CLI) Run(args []string) error {
 			Usage: "Generate AES Key",
 			Flags: append(
 				c.defaultFlags(),
-				cli.StringFlag{
-					Name:        "key",
-					Destination: &c.Config.EncryptionKeyPath,
-				},
 				cli.BoolFlag{
 					Name:        "force-update",
 					Destination: &c.Config.UpdateKey,
@@ -243,6 +236,10 @@ func (c *CLI) defaultFlags() []cli.Flag {
 		cli.StringFlag{
 			Name:        "config, c",
 			Destination: &c.Config.ConfigFile,
+		},
+		cli.StringFlag{
+			Name:        "key",
+			Destination: &c.Config.EncryptionKeyPath,
 		},
 	}
 }

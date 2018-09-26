@@ -26,14 +26,6 @@
   version = "v0.0.4"
 
 [[projects]]
-  digest = "1:78bbb1ba5b7c3f2ed0ea1eab57bdd3859aec7e177811563edc41198a760b06af"
-  name = "github.com/mitchellh/go-homedir"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "ae18d6b8b3205b561c79e8e5f69bff09736185f4"
-  version = "v1.0.0"
-
-[[projects]]
   branch = "master"
   digest = "1:b79b6cb1ff183e3989eacbbd37016225043f1746f5d00a3fe0ae999622fe3246"
   name = "github.com/tzmfreedom/go-soapforce"
@@ -86,7 +78,6 @@
   analyzer-version = 1
   input-imports = [
     "github.com/k0kubun/pp",
-    "github.com/mitchellh/go-homedir",
     "github.com/tzmfreedom/go-soapforce",
     "github.com/urfave/cli",
     "golang.org/x/text/encoding/japanese",
