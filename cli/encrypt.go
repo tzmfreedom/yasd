@@ -7,9 +7,6 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"io"
-	"io/ioutil"
-	"os"
-	"path/filepath"
 )
 
 func encrypt(plain []byte, key []byte) (string, error) {
@@ -57,22 +54,6 @@ func generateKey() ([]byte, error) {
 		return nil, err
 	}
 	return key, nil
-}
-
-func createEncryptionKeyFile(path string) error {
-	dir := filepath.Dir(path)
-	if _, err := os.Stat(dir); err != nil {
-		if err := os.MkdirAll(dir, 0700); err != nil {
-			return err
-		}
-	}
-	key, err := generateKey()
-	if err != nil {
-		return err
-	}
-	b64key := base64.StdEncoding.EncodeToString(key)
-	err = ioutil.WriteFile(path, []byte(b64key), 0600)
-	return err
 }
 
 func padPKCS7(data []byte) []byte {

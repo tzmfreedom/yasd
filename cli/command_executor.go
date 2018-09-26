@@ -382,21 +382,12 @@ func (c *CommandExecutor) undelete(cfg config) error {
 }
 
 func (c *CommandExecutor) generateEncryptionKey(cfg config) error {
-	if _, err := os.Stat(cfg.EncryptionKeyPath); err != nil {
-		err := createEncryptionKeyFile(cfg.EncryptionKeyPath)
-		if err == nil {
-			fmt.Printf("generate key on %s", cfg.EncryptionKeyPath)
-		}
+	key, err := generateKey()
+	if err != nil {
 		return err
-	} else if cfg.UpdateKey {
-		err := createEncryptionKeyFile(cfg.EncryptionKeyPath)
-		if err == nil {
-			fmt.Printf("generate key on %s", cfg.EncryptionKeyPath)
-		}
-		return err
-	} else {
-		fmt.Printf("key is already exists on %s", cfg.EncryptionKeyPath)
 	}
+	b64key := base64.StdEncoding.EncodeToString(key)
+	fmt.Println(b64key)
 	return nil
 }
 

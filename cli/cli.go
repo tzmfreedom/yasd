@@ -2,10 +2,7 @@ package cli
 
 import (
 	"fmt"
-	"os"
-	"path/filepath"
 
-	"github.com/mitchellh/go-homedir"
 	"github.com/urfave/cli"
 )
 
@@ -59,11 +56,6 @@ func NewCli() *CLI {
 }
 
 func (c *CLI) Run(args []string) error {
-	defaultEncryptionKeyPath, err := defaultEncryptionKeyPath()
-	if err != nil {
-		return err
-	}
-
 	cli.VersionPrinter = func(c *cli.Context) {
 		fmt.Printf("version=%s revision=%s\n", c.App.Version, Revision)
 	}
@@ -181,7 +173,6 @@ func (c *CLI) Run(args []string) error {
 				c.defaultFlags(),
 				cli.StringFlag{
 					Name:        "key",
-					Value:       defaultEncryptionKeyPath,
 					Destination: &c.Config.EncryptionKeyPath,
 				},
 				cli.BoolFlag{
@@ -197,14 +188,7 @@ func (c *CLI) Run(args []string) error {
 		{
 			Name:  "encrypt",
 			Usage: "Encrypt password",
-			Flags: append(
-				c.defaultFlags(),
-				cli.StringFlag{
-					Name:        "key",
-					Value:       defaultEncryptionKeyPath,
-					Destination: &c.Config.EncryptionKeyPath,
-				},
-			),
+			Flags: c.defaultFlags(),
 			Action: func(ctx *cli.Context) error {
 				executor := NewCommandExecutor(c.Config.Debug)
 				return executor.encryptCredential(*c.Config)
@@ -285,31 +269,4 @@ func (c *CLI) defaultDmlFlags() []cli.Flag {
 			Destination: &c.Config.ErrorPath,
 		},
 	)
-}
-
-func configDir() (string, error) {
-	home, err := homedir.Dir()
-	if err != nil {
-		return "", err
-	}
-	return filepath.Join(home, ".config", "yasd"), nil
-}
-
-func createConfigDir() (string, error) {
-	dir, err := configDir()
-	if err != nil {
-		return "", err
-	}
-	if err = os.MkdirAll(dir, 0700); err != nil {
-		return "", err
-	}
-	return dir, nil
-}
-
-func defaultEncryptionKeyPath() (string, error) {
-	dir, err := configDir()
-	if err != nil {
-		return "", err
-	}
-	return filepath.Join(dir, "key"), nil
 }
