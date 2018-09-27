@@ -26,6 +26,14 @@
   version = "v0.0.4"
 
 [[projects]]
+  digest = "1:e60f2f1cd2e8dfdea48c2440c303d103266e754ab1d8b75796a4e4caddb7a68c"
+  name = "github.com/tealeg/xlsx"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "8be35264fa75a1bbe954ce51eba04f273e2c59e5"
+  version = "v1.0.3"
+
+[[projects]]
   branch = "master"
   digest = "1:b79b6cb1ff183e3989eacbbd37016225043f1746f5d00a3fe0ae999622fe3246"
   name = "github.com/tzmfreedom/go-soapforce"
@@ -78,6 +86,7 @@
   analyzer-version = 1
   input-imports = [
     "github.com/k0kubun/pp",
+    "github.com/tealeg/xlsx",
     "github.com/tzmfreedom/go-soapforce",
     "github.com/urfave/cli",
     "golang.org/x/text/encoding/japanese",

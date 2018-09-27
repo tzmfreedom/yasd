@@ -1,4 +1,4 @@
-package cli
+package main
 
 import (
 	"encoding/csv"
@@ -7,6 +7,7 @@ import (
 
 	"github.com/k0kubun/pp"
 	"github.com/tzmfreedom/go-soapforce"
+	"github.com/urfave/cli"
 )
 
 type responseHandler interface {
@@ -16,43 +17,16 @@ type responseHandler interface {
 	HandleUndelete(results []*soapforce.UndeleteResult) error
 }
 
-func getResponseHandler(cfg config) (responseHandler, error) {
-	h, err := NewResponseWriteHandler(cfg)
-	return h, err
-}
+type NoopResponseWriteHandler struct {}
+
+func (h *NoopResponseWriteHandler) Handle(results []*soapforce.SaveResult) error { return nil }
+func (h *NoopResponseWriteHandler) HandleUpsert(results []*soapforce.UpsertResult) error { return nil }
+func (h *NoopResponseWriteHandler) HandleDelete(results []*soapforce.DeleteResult) error { return nil }
+func (h *NoopResponseWriteHandler) HandleUndelete(results []*soapforce.UndeleteResult) error { return nil }
 
 type ResponseWriteHandler struct {
 	successWriter *csv.Writer
 	errorWriter   *csv.Writer
-}
-
-func NewResponseWriteHandler(cfg config) (*ResponseWriteHandler, error) {
-	successWriter, err := createCsvWriter(cfg.SuccessPath)
-	if err != nil {
-		return nil, err
-	}
-	errorWriter, err := createCsvWriter(cfg.ErrorPath)
-	if err != nil {
-		return nil, err
-	}
-	return &ResponseWriteHandler{
-		successWriter: successWriter,
-		errorWriter:   errorWriter,
-	}, nil
-}
-
-func createCsvWriter(path string) (*csv.Writer, error) {
-	var writer *csv.Writer
-	if path != "" {
-		fp, err := os.Create(path)
-		if err != nil {
-			return nil, err
-		}
-		writer = csv.NewWriter(fp)
-	} else {
-		writer = csv.NewWriter(os.Stderr)
-	}
-	return writer, nil
 }
 
 func (h *ResponseWriteHandler) Handle(results []*soapforce.SaveResult) error {
@@ -144,4 +118,40 @@ func (h *ResponseWriteHandler) HandleUndelete(results []*soapforce.UndeleteResul
 	h.successWriter.Flush()
 	h.errorWriter.Flush()
 	return nil
+}
+
+func newResponseWriteHandler(success string, error string) (*ResponseWriteHandler, error) {
+	successWriter, err := createCsvWriter(success)
+	if err != nil {
+		return nil, err
+	}
+	errorWriter, err := createCsvWriter(error)
+	if err != nil {
+		return nil, err
+	}
+	return &ResponseWriteHandler{
+		successWriter: successWriter,
+		errorWriter:   errorWriter,
+	}, nil
+}
+
+func createCsvWriter(path string) (*csv.Writer, error) {
+	var writer *csv.Writer
+	if path != "" {
+		fp, err := os.Create(path)
+		if err != nil {
+			return nil, err
+		}
+		writer = csv.NewWriter(fp)
+	} else {
+		writer = csv.NewWriter(os.Stderr)
+	}
+	return writer, nil
+}
+
+func getResponseHandler(c *cli.Context) (responseHandler, error) {
+	success := c.String("success-file")
+	error := c.String("error-file")
+	h, err := newResponseWriteHandler(success, error)
+	return h, err
 }
