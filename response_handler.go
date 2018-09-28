@@ -17,12 +17,14 @@ type responseHandler interface {
 	HandleUndelete(results []*soapforce.UndeleteResult) error
 }
 
-type NoopResponseWriteHandler struct {}
+type NoopResponseWriteHandler struct{}
 
-func (h *NoopResponseWriteHandler) Handle(results []*soapforce.SaveResult) error { return nil }
+func (h *NoopResponseWriteHandler) Handle(results []*soapforce.SaveResult) error         { return nil }
 func (h *NoopResponseWriteHandler) HandleUpsert(results []*soapforce.UpsertResult) error { return nil }
 func (h *NoopResponseWriteHandler) HandleDelete(results []*soapforce.DeleteResult) error { return nil }
-func (h *NoopResponseWriteHandler) HandleUndelete(results []*soapforce.UndeleteResult) error { return nil }
+func (h *NoopResponseWriteHandler) HandleUndelete(results []*soapforce.UndeleteResult) error {
+	return nil
+}
 
 type ResponseWriteHandler struct {
 	successWriter *csv.Writer

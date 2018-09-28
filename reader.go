@@ -6,11 +6,23 @@ import (
 	"os"
 	"strings"
 
+	"bufio"
+
 	"github.com/tealeg/xlsx"
 	"github.com/urfave/cli"
 	"golang.org/x/text/encoding/japanese"
 	"golang.org/x/text/transform"
 )
+
+type Stringer interface {
+	String(string) (string, error)
+}
+
+type NoopDecoder struct{}
+
+func (d *NoopDecoder) String(s string) (string, error) {
+	return s, nil
+}
 
 type Reader interface {
 	Read() ([]string, error)
@@ -19,7 +31,7 @@ type Reader interface {
 
 type CsvReader struct {
 	cr *csv.Reader
-	f *os.File
+	f  *os.File
 }
 
 func (r *CsvReader) Read() ([]string, error) {
@@ -47,6 +59,51 @@ func (r *ExcelReader) Read() ([]string, error) {
 }
 
 func (r *ExcelReader) Close() error { return nil }
+
+type FixWidthFileReader struct {
+	f           *os.File
+	s           *bufio.Scanner
+	e           string
+	byteNumbers []int
+}
+
+func (r *FixWidthFileReader) Read() ([]string, error) {
+	if r.s.Scan() {
+		var s Stringer
+		switch strings.ToUpper(r.e) {
+		case "SHIFT-JIS", "SJIS", "SHIFT_JIS":
+			s = japanese.ShiftJIS.NewDecoder()
+		default:
+			s = &NoopDecoder{}
+		}
+		t := r.s.Text()
+		start := 0
+		values := make([]string, len(r.byteNumbers))
+		for i, n := range r.byteNumbers {
+			value, err := s.String(t[start : start+n])
+			if err != nil {
+				return nil, err
+			}
+			values[i] = strings.TrimSpace(value)
+			start += n
+		}
+		return values, nil
+	}
+	return nil, nil
+}
+
+func (r *FixWidthFileReader) Close() error {
+	return r.f.Close()
+}
+
+func newFixWidthFileReader(f string, e string) (*FixWidthFileReader, error) {
+	fp, err := os.Open(f)
+	if err != nil {
+		return nil, err
+	}
+	s := bufio.NewScanner(fp)
+	return &FixWidthFileReader{f: fp, s: s, e: e, byteNumbers: []int{6, 7, 3}}, nil
+}
 
 func newExcelReader(f string, sheet string) (*ExcelReader, error) {
 	xf, err := xlsx.OpenFile(f)
@@ -91,7 +148,7 @@ func getReader(c *cli.Context) (Reader, error) {
 		cr.Comma = rune(delimiter)
 		cr.LazyQuotes = true
 
-		r = &CsvReader{ cr: cr, f: fp }
+		r = &CsvReader{cr: cr, f: fp}
 	case "xls":
 		s := "import"
 		r, err = newExcelReader(f, s)
