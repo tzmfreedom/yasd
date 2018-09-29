@@ -4,6 +4,7 @@ import (
 	"encoding/csv"
 	"errors"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"bufio"
@@ -30,12 +31,19 @@ type Reader interface {
 }
 
 type CsvReader struct {
-	cr *csv.Reader
-	f  *os.File
+	cr       *csv.Reader
+	f        *os.File
+	counter  int
+	startRow int
 }
 
 func (r *CsvReader) Read() ([]string, error) {
-	return r.Read()
+	if r.startRow > r.counter {
+		r.counter++
+		return nil, nil
+	}
+	r.counter++
+	return r.cr.Read()
 }
 
 func (r *CsvReader) Close() error {
@@ -43,12 +51,17 @@ func (r *CsvReader) Close() error {
 }
 
 type ExcelReader struct {
-	xf      *xlsx.File
-	xs      *xlsx.Sheet
-	counter int
+	xf       *xlsx.File
+	xs       *xlsx.Sheet
+	counter  int
+	startRow int
 }
 
 func (r *ExcelReader) Read() ([]string, error) {
+	if r.startRow > r.counter {
+		r.counter++
+		return nil, nil
+	}
 	row := r.xs.Rows[r.counter]
 	values := make([]string, len(row.Cells))
 	for i, cell := range row.Cells {
@@ -105,7 +118,7 @@ func newFixWidthFileReader(f string, e string) (*FixWidthFileReader, error) {
 	return &FixWidthFileReader{f: fp, s: s, e: e, byteNumbers: []int{6, 7, 3}}, nil
 }
 
-func newExcelReader(f string, sheet string) (*ExcelReader, error) {
+func newExcelReader(f string, sheet string, start int) (*ExcelReader, error) {
 	xf, err := xlsx.OpenFile(f)
 	if err != nil {
 		return nil, err
@@ -113,9 +126,10 @@ func newExcelReader(f string, sheet string) (*ExcelReader, error) {
 	for _, s := range xf.Sheets {
 		if s.Name == sheet {
 			return &ExcelReader{
-				counter: 0,
-				xf:      xf,
-				xs:      s,
+				counter:  0,
+				xf:       xf,
+				xs:       s,
+				startRow: start,
 			}, nil
 		}
 	}
@@ -126,12 +140,13 @@ func getReader(c *cli.Context) (Reader, error) {
 	f := c.String("file")
 	encoding := c.String("encoding")
 	delimiter := c.String("delimiter")[0]
-	filetype := c.String("file-type")
+	start := c.Int("start-row")
+	ext := filepath.Ext(f)
 
 	var r Reader
 	var err error
-	switch filetype {
-	case "csv":
+	switch ext {
+	case ".csv":
 		fp, err := os.Open(f)
 		if err != nil {
 			return nil, err
@@ -148,15 +163,15 @@ func getReader(c *cli.Context) (Reader, error) {
 		cr.Comma = rune(delimiter)
 		cr.LazyQuotes = true
 
-		r = &CsvReader{cr: cr, f: fp}
-	case "xls":
+		r = &CsvReader{cr: cr, f: fp, startRow: start}
+	case ".xls":
 		s := "import"
-		r, err = newExcelReader(f, s)
+		r, err = newExcelReader(f, s, start)
 		if err != nil {
 			return nil, err
 		}
-	case "xlsx":
-	case "json":
+	case ".xlsx":
+	case ".json":
 	}
 	return r, nil
 }

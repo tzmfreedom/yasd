@@ -157,6 +157,9 @@ func update(c *cli.Context) error {
 		if err != nil {
 			return err
 		}
+		if fields == nil {
+			continue
+		}
 		sobject := createSObject(t, headers, fields, insertNulls)
 		sobjects = append(sobjects, sobject)
 		if len(sobjects) == 200 {
@@ -448,16 +451,15 @@ func mapping(headers []string, m string) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	err = yaml.Unmarshal(buf, mapping)
-	if err != nil {
+	if err = yaml.Unmarshal(buf, mapping); err != nil {
 		return nil, err
 	}
-	returnHeaders := []string{}
-	for _, h := range headers {
+	returnHeaders := make([]string, len(headers))
+	for i, h := range headers {
 		if v, ok := mapping[h]; ok {
-			returnHeaders = append(returnHeaders, v)
+			returnHeaders[i] = v
 		} else {
-			returnHeaders = append(returnHeaders, h)
+			returnHeaders[i] = h
 		}
 	}
 	return returnHeaders, nil

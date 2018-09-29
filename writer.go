@@ -2,11 +2,16 @@ package main
 
 import (
 	"encoding/csv"
+	"io"
 	"os"
+	"runtime"
+	"strings"
 
 	"github.com/k0kubun/pp"
 	"github.com/tzmfreedom/go-soapforce"
 	"github.com/urfave/cli"
+	"golang.org/x/text/encoding/japanese"
+	"golang.org/x/text/transform"
 )
 
 type writer interface {
@@ -49,21 +54,28 @@ func (w *CsvWriter) Close() error {
 	return nil
 }
 
-func newCsvWriter(f string) (*CsvWriter, error) {
-	var csvWriter *csv.Writer
+func newCsvWriter(f string, e string) (*CsvWriter, error) {
 	var writer *CsvWriter
 	if f != "" {
 		fp, err := os.Create(f)
 		if err != nil {
 			return nil, err
 		}
-		csvWriter = csv.NewWriter(fp)
+		w := newWriterWithEncoding(fp, e)
+		csvWriter := csv.NewWriter(w)
+		if runtime.GOOS == "windows" {
+			csvWriter.UseCRLF = true
+		}
 		writer = &CsvWriter{
 			writer: csvWriter,
 			fp:     fp,
 		}
 	} else {
-		csvWriter = csv.NewWriter(os.Stdout)
+		w := newWriterWithEncoding(os.Stdout, e)
+		csvWriter := csv.NewWriter(w)
+		if runtime.GOOS == "windows" {
+			csvWriter.UseCRLF = true
+		}
 		writer = &CsvWriter{
 			writer: csvWriter,
 		}
@@ -71,17 +83,26 @@ func newCsvWriter(f string) (*CsvWriter, error) {
 	return writer, nil
 }
 
+func newWriterWithEncoding(w io.Writer, e string) io.Writer {
+	switch strings.ToUpper(e) {
+	case "SHIFT-JIS", "SHIFT_JIS", "SJIS":
+		return transform.NewWriter(w, japanese.ShiftJIS.NewEncoder())
+	default:
+		return w
+	}
+}
+
 func getWriter(c *cli.Context) (writer, error) {
 	f := c.String("output")
 	format := c.String("format")
+	e := c.String("encoding")
+
 	switch format {
-	case "csv":
-		return newCsvWriter(f)
-	case "tsv":
-		return newCsvWriter(f)
+	case "csv", "tsv":
+		return newCsvWriter(f, e)
 	case "debug":
 		return &PPWriter{}, nil
 	default:
-		return newCsvWriter(f)
+		return newCsvWriter(f, e)
 	}
 }
