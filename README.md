@@ -13,7 +13,7 @@ For Windows user with cmd.exe
   -Command "iex ((New-Object System.Net.WebClient).DownloadString('http://install.freedom-man.com/yasd.ps1'))" ^
   && SET "PATH=%PATH%;%APPDATA%\yasd\bin"
 ```
-For Windows user with cmd.exe
+For Windows user with PowerShell
 ```powershell
 Set-ExecutionPolicy Bypass -Scope Process -Force; iex ((New-Object System.Net.WebClient).DownloadString('http://install.freedom-man.com/yasd.ps1'))
 ```
