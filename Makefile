@@ -71,3 +71,7 @@ dist:
 docker-build:
 	docker build . -t yasd
 
+.PHONY: tag
+tag:
+	git tag v$(VERSION) -f
+	git push origin v$(VERSION) -f
