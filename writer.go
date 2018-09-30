@@ -51,7 +51,7 @@ func (w *CsvWriter) Write(headers []string, record *soapforce.SObject) error {
 		if h == "Id" {
 			values[i] = record.Id
 		} else {
-			values[i] = record.Fields[h]
+			values[i] = record.Fields[h].(string)
 		}
 	}
 	return w.writer.Write(values)

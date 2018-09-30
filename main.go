@@ -36,7 +36,7 @@ func main() {
 
 	statusCode := ExitCodeOK
 	if err != nil {
-		fmt.Println(err.Error())
+		fmt.Fprintf(os.Stderr, err.Error())
 		statusCode = ExitCodeError
 	}
 	os.Exit(statusCode)

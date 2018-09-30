@@ -46,7 +46,7 @@ func upsert(c *cli.Context) error {
 		if err != nil {
 			return err
 		}
-		sobject := createSObject(t, headers, fields, insertNulls)
+		sobject := createSObject(client, t, headers, fields, insertNulls)
 		sobjects = append(sobjects, sobject)
 		if len(sobjects) == 200 {
 			res, err := client.Upsert(sobjects, upsertKey)

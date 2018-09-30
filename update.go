@@ -48,7 +48,7 @@ func update(c *cli.Context) error {
 		if fields == nil {
 			continue
 		}
-		sobject := createSObject(t, headers, fields, insertNulls)
+		sobject := createSObject(client, t, headers, fields, insertNulls)
 		sobjects = append(sobjects, sobject)
 		if len(sobjects) == 200 {
 			res, err := client.Update(sobjects)

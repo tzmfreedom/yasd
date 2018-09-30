@@ -4,7 +4,9 @@ import (
 	"encoding/base64"
 	"fmt"
 	"io/ioutil"
+	"strings"
 
+	"github.com/k0kubun/pp"
 	"github.com/tzmfreedom/go-soapforce"
 	"github.com/urfave/cli"
 	"gopkg.in/yaml.v2"
@@ -64,8 +66,8 @@ func getId(headers []string, f []string) string {
 	return ""
 }
 
-func createSObject(sObjectType string, headers []string, f []string, insertNulls bool) *soapforce.SObject {
-	fields := map[string]string{}
+func createSObject(client *soapforce.Client, sObjectType string, headers []string, f []string, insertNulls bool) *soapforce.SObject {
+	fields := map[string]interface{}{}
 	sobject := &soapforce.SObject{
 		Type:   sObjectType,
 		Fields: fields,
@@ -77,24 +79,15 @@ func createSObject(sObjectType string, headers []string, f []string, insertNulls
 		} else if insertNulls && f[i] == "" {
 			fieldsToNull = append(fieldsToNull, header)
 		} else {
-			fields[header] = f[i]
-		}
-	}
-	sobject.FieldsToNull = fieldsToNull
-	return sobject
-}
+			if strings.Contains(header, ".") {
+				values := strings.Split(header, ".")
+				referenceField := strings.Replace(values[0], "__R", "__r", -1)
 
-func createInsertSObject(sObjectType string, headers []string, f []string, insertNulls bool) *soapforce.SObject {
-	fields := map[string]string{}
-	sobject := &soapforce.SObject{
-		Type:   sObjectType,
-		Fields: fields,
-	}
-	fieldsToNull := []string{}
-	for i, header := range headers {
-		if header != "Id" {
-			if insertNulls && f[i] == "" {
-				fieldsToNull = append(fieldsToNull, header)
+				obj := map[string]string{}
+				pp.Print(globalReferenceMap)
+				obj["type"] = globalReferenceMap[client.UserInfo.OrganizationId][referenceField]
+				obj[values[1]] = f[i]
+				fields[values[0]] = obj
 			} else {
 				fields[header] = f[i]
 			}
@@ -143,5 +136,22 @@ func validateLoginFlag(c *cli.Context, command string) error {
 		_ = cli.ShowCommandHelp(c, command)
 		return cli.NewExitError("endpoint is required", 1)
 	}
+	return nil
+}
+
+var globalReferenceMap = map[string]map[string]string{}
+
+func setReferenceMap(client *soapforce.Client, t string) error {
+	result, err := client.DescribeSObject(t)
+	if err != nil {
+		return err
+	}
+	referenceMap := map[string]string{}
+	for _, f := range result.Fields {
+		if *f.Type_ == "reference" {
+			referenceMap[f.RelationshipName] = f.ReferenceTo[0]
+		}
+	}
+	globalReferenceMap[client.UserInfo.OrganizationId] = referenceMap
 	return nil
 }

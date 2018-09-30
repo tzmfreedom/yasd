@@ -144,9 +144,6 @@ func defaultFlags() []cli.Flag {
 			Name: "debug, d",
 		},
 		cli.StringFlag{
-			Name: "config, c",
-		},
-		cli.StringFlag{
 			Name: "key",
 		},
 	}
