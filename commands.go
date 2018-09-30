@@ -15,9 +15,6 @@ var Commands = []cli.Command{
 				Name: "query, q",
 			},
 			cli.StringFlag{
-				Name: "output, o",
-			},
-			cli.StringFlag{
 				Name: "format",
 			},
 			cli.IntFlag{
@@ -97,12 +94,7 @@ var Commands = []cli.Command{
 	{
 		Name:  "generate-key",
 		Usage: "Generate AES Key",
-		Flags: append(
-			defaultFlags(),
-			cli.BoolFlag{
-				Name: "force-update",
-			},
-		),
+		Flags: defaultFlags(),
 		Action: func(c *cli.Context) error {
 			return generateEncryptionKey()
 		},
@@ -138,8 +130,8 @@ func defaultFlags() []cli.Flag {
 			EnvVar: "SALESFORCE_APIVERSION",
 		},
 		cli.StringFlag{
-			Name:  "delimiter",
-			Value: ",",
+			Name:  "mode",
+			Value: "utf8",
 		},
 		cli.StringFlag{
 			Name:  "encoding",

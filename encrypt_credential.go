@@ -32,7 +32,7 @@ func encryptCredential(c *cli.Context) error {
 	}
 	key, err := base64.StdEncoding.DecodeString(string(b64key))
 	if err != nil {
-		return err
+		return cli.NewExitError("key content is invalid. it should be base64 encoded string", 1)
 	}
 	encryptedPassword, err := encrypt([]byte(password), key)
 	if err != nil {

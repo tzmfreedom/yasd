@@ -1,0 +1,37 @@
+#compdef yasd
+
+function __yasd_subcommands() {
+  _values -w '' \
+    'export[export records]' \
+    'insert[insert records]' \
+    'update[update records]' \
+    'upsert[upsert records]' \
+    'delete[delete records]' \
+    'undelete[undelete records]' \
+    'encrypt[encrypt password]' \
+    'generate-key[generate key to encrypt password]'
+}
+
+_arguments \
+  '(- 1)'{-h,--help}'[show help]' \
+  '(1)--version[show version]' \
+  '1: :__yasd_subcommands' \
+  '--username' \
+  '--password' \
+  '--endpoint' \
+  '--api-version' \
+  '--query' \
+  '--type' \
+  '--mode' \
+  '--file' \
+  '--success-file' \
+  '--error-file' \
+  '--debug' \
+  '--config' \
+  '--key' \
+  '--mapping' \
+  '--encoding' \
+  '--upsert-key' \
+  '--insert-nulls' \
+  '--batch-size' \
+  '--format'

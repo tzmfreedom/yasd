@@ -65,33 +65,15 @@ func (w *CsvWriter) Close() error {
 	return nil
 }
 
-func newCsvWriter(f string, e string, comma rune) (*CsvWriter, error) {
-	var writer *CsvWriter
-	if f != "" {
-		fp, err := os.Create(f)
-		if err != nil {
-			return nil, err
-		}
-		w := newWriterWithEncoding(fp, e)
-		csvWriter := csv.NewWriter(w)
-		if runtime.GOOS == "windows" {
-			csvWriter.UseCRLF = true
-		}
-		csvWriter.Comma = comma
-		writer = &CsvWriter{
-			writer: csvWriter,
-			fp:     fp,
-		}
-	} else {
-		w := newWriterWithEncoding(os.Stdout, e)
-		csvWriter := csv.NewWriter(w)
-		if runtime.GOOS == "windows" {
-			csvWriter.UseCRLF = true
-		}
-		csvWriter.Comma = comma
-		writer = &CsvWriter{
-			writer: csvWriter,
-		}
+func newCsvWriter(e string, comma rune) (*CsvWriter, error) {
+	w := newWriterWithEncoding(os.Stdout, e)
+	csvWriter := csv.NewWriter(w)
+	if runtime.GOOS == "windows" {
+		csvWriter.UseCRLF = true
+	}
+	csvWriter.Comma = comma
+	writer := &CsvWriter{
+		writer: csvWriter,
 	}
 	return writer, nil
 }
@@ -106,7 +88,6 @@ func newWriterWithEncoding(w io.Writer, e string) io.Writer {
 }
 
 func getWriter(c *cli.Context) (writer, error) {
-	f := c.String("output")
 	format := c.String("format")
 	e := c.String("encoding")
 	var comma rune
@@ -119,10 +100,10 @@ func getWriter(c *cli.Context) (writer, error) {
 
 	switch format {
 	case "csv", "tsv":
-		return newCsvWriter(f, e, comma)
+		return newCsvWriter(e, comma)
 	case "debug":
 		return &PPWriter{}, nil
 	default:
-		return newCsvWriter(f, e, comma)
+		return newCsvWriter(e, comma)
 	}
 }

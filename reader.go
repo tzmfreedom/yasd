@@ -139,9 +139,9 @@ func newExcelReader(f string, sheet string, start int) (*ExcelReader, error) {
 func getReader(c *cli.Context) (Reader, error) {
 	f := c.String("file")
 	encoding := c.String("encoding")
-	delimiter := c.String("delimiter")[0]
 	start := c.Int("start-row")
 	ext := filepath.Ext(f)
+	mode := c.String("mode")
 
 	var r Reader
 	var err error
@@ -160,7 +160,9 @@ func getReader(c *cli.Context) (Reader, error) {
 		case "EUC-JP", "EUCJP":
 			cr = csv.NewReader(transform.NewReader(fp, japanese.EUCJP.NewDecoder()))
 		}
-		cr.Comma = rune(delimiter)
+		if mode == "tsv" {
+			cr.Comma = '\t'
+		}
 		cr.LazyQuotes = true
 
 		r = &CsvReader{cr: cr, f: fp, startRow: start}
