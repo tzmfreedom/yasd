@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/tzmfreedom/yasd.svg?branch=master)](https://travis-ci.org/tzmfreedom/yasd)
+
 # YASD
 
 Yet Another Salesforce Dataloader
