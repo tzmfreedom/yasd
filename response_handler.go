@@ -2,12 +2,16 @@ package main
 
 import (
 	"encoding/csv"
+	"io"
 	"os"
+	"runtime"
 	"strings"
 
 	"github.com/k0kubun/pp"
 	"github.com/tzmfreedom/go-soapforce"
 	"github.com/urfave/cli"
+	"golang.org/x/text/encoding/japanese"
+	"golang.org/x/text/transform"
 )
 
 type responseHandler interface {
@@ -122,12 +126,12 @@ func (h *ResponseWriteHandler) HandleUndelete(results []*soapforce.UndeleteResul
 	return nil
 }
 
-func newResponseWriteHandler(success string, error string) (*ResponseWriteHandler, error) {
-	successWriter, err := createCsvWriter(success)
+func newResponseWriteHandler(success string, error string, encoding string) (*ResponseWriteHandler, error) {
+	successWriter, err := createCsvWriter(success, encoding)
 	if err != nil {
 		return nil, err
 	}
-	errorWriter, err := createCsvWriter(error)
+	errorWriter, err := createCsvWriter(error, encoding)
 	if err != nil {
 		return nil, err
 	}
@@ -137,16 +141,26 @@ func newResponseWriteHandler(success string, error string) (*ResponseWriteHandle
 	}, nil
 }
 
-func createCsvWriter(path string) (*csv.Writer, error) {
+func createCsvWriter(path string, encoding string) (*csv.Writer, error) {
 	var writer *csv.Writer
 	if path != "" {
 		fp, err := os.Create(path)
 		if err != nil {
 			return nil, err
 		}
-		writer = csv.NewWriter(fp)
+		var w io.Writer
+		switch strings.ToUpper(encoding) {
+		case "SHIFT-JIS", "SHIFT_JIS", "SJIS":
+			w = transform.NewWriter(fp, japanese.ShiftJIS.NewEncoder())
+		default:
+			w = fp
+		}
+		writer = csv.NewWriter(w)
 	} else {
 		writer = csv.NewWriter(os.Stderr)
+	}
+	if runtime.GOOS == "windows" {
+		writer.UseCRLF = true
 	}
 	return writer, nil
 }
@@ -154,6 +168,8 @@ func createCsvWriter(path string) (*csv.Writer, error) {
 func getResponseHandler(c *cli.Context) (responseHandler, error) {
 	success := c.String("success-file")
 	error := c.String("error-file")
-	h, err := newResponseWriteHandler(success, error)
+	encoding := c.String("encoding")
+
+	h, err := newResponseWriteHandler(success, error, encoding)
 	return h, err
 }
