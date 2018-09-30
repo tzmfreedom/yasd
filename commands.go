@@ -24,6 +24,9 @@ var Commands = []cli.Command{
 				Name:  "batch-size",
 				Value: 500,
 			},
+			cli.StringFlag{
+				Name: "mode",
+			},
 		),
 		Action: func(c *cli.Context) error {
 			return query(c)

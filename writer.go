@@ -15,7 +15,8 @@ import (
 )
 
 type writer interface {
-	Write(record *soapforce.SObject) error
+	Header([]string) error
+	Write(headers []string, record *soapforce.SObject) error
 	Close() error
 }
 
@@ -23,7 +24,12 @@ type PPWriter struct {
 	writer *csv.Writer
 }
 
-func (w *PPWriter) Write(record *soapforce.SObject) error {
+func (w *PPWriter) Header(h []string) error {
+	pp.Print(h)
+	return nil
+}
+
+func (w *PPWriter) Write(headers []string, record *soapforce.SObject) error {
 	pp.Print(record)
 	return nil
 }
@@ -35,13 +41,18 @@ type CsvWriter struct {
 	fp     *os.File
 }
 
-func (w *CsvWriter) Write(record *soapforce.SObject) error {
-	values := []string{}
-	if record.Id != "" {
-		values = append(values, record.Id)
-	}
-	for _, v := range record.Fields {
-		values = append(values, v)
+func (w *CsvWriter) Header(h []string) error {
+	return w.writer.Write(h)
+}
+
+func (w *CsvWriter) Write(headers []string, record *soapforce.SObject) error {
+	values := make([]string, len(headers))
+	for i, h := range headers {
+		if h == "Id" {
+			values[i] = record.Id
+		} else {
+			values[i] = record.Fields[h]
+		}
 	}
 	return w.writer.Write(values)
 }
@@ -54,7 +65,7 @@ func (w *CsvWriter) Close() error {
 	return nil
 }
 
-func newCsvWriter(f string, e string) (*CsvWriter, error) {
+func newCsvWriter(f string, e string, comma rune) (*CsvWriter, error) {
 	var writer *CsvWriter
 	if f != "" {
 		fp, err := os.Create(f)
@@ -66,6 +77,7 @@ func newCsvWriter(f string, e string) (*CsvWriter, error) {
 		if runtime.GOOS == "windows" {
 			csvWriter.UseCRLF = true
 		}
+		csvWriter.Comma = comma
 		writer = &CsvWriter{
 			writer: csvWriter,
 			fp:     fp,
@@ -76,6 +88,7 @@ func newCsvWriter(f string, e string) (*CsvWriter, error) {
 		if runtime.GOOS == "windows" {
 			csvWriter.UseCRLF = true
 		}
+		csvWriter.Comma = comma
 		writer = &CsvWriter{
 			writer: csvWriter,
 		}
@@ -96,13 +109,20 @@ func getWriter(c *cli.Context) (writer, error) {
 	f := c.String("output")
 	format := c.String("format")
 	e := c.String("encoding")
+	var comma rune
+	switch c.String("mode") {
+	case "tsv", "t":
+		comma = '\t'
+	default:
+		comma = ','
+	}
 
 	switch format {
 	case "csv", "tsv":
-		return newCsvWriter(f, e)
+		return newCsvWriter(f, e, comma)
 	case "debug":
 		return &PPWriter{}, nil
 	default:
-		return newCsvWriter(f, e)
+		return newCsvWriter(f, e, comma)
 	}
 }

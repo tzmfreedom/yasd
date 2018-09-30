@@ -6,9 +6,13 @@ Yet Another Salesforce Dataloader
 
 ## Install
 
-For Windows user
+For Windows user with cmd.exe
+```
+@"%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -InputFormat None -ExecutionPolicy Bypass -Command "iex ((New-Object System.Net.WebClient).DownloadString('http://install.freedom-man.com/yasd.ps1'))"
+```
+For Windows user with cmd.exe
 ```powershell
-(New-Object Net.WebClient).DownloadString('http://install.freedom-man.com/yasd-win') | iex
+Set-ExecutionPolicy Bypass -Scope Process -Force; iex ((New-Object System.Net.WebClient).DownloadString('http://install.freedom-man.com/yasd.ps1'))
 ```
 
 For Linux, MacOS user
@@ -25,7 +29,7 @@ $ go get github.com/tzmfreedom/yasd
 
 Export records
 ```bash
-$ yasd export -t {Salesforce Object Name}
+$ yasd export -q {SOQL}
 ```
 
 Insert records
