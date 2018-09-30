@@ -67,7 +67,7 @@ dist:
 	$(DIST_DIRS) cp ../LICENSE {} \; && \
 	$(DIST_DIRS) cp ../README.md {} \; && \
 	$(DIST_DIRS) cp ../completions/zsh/_$(NAME) {} \; && \
-	$(DIST_NO_WINDOWS_DIRS) tar zcf $(NAME)-$(VERSION)-{}.tar.gz {} && \
+	$(DIST_NO_WINDOWS_DIRS) tar zcf $(NAME)-$(VERSION)-{}.tar.gz {} \; && \
 	$(DIST_WINDOWS_DIRS) zip -r $(NAME)-$(VERSION)-{}.zip {} \;
 
 .PHONY: dist
