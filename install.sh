@@ -72,7 +72,7 @@ chmod +x ${PREFIX}/bin/${NAME}
 # completion
 if [ -d ${COMP_PREFIX} ]; then
   if [ "${ZSH_COMPLETION}" == "t" ]; then
-    mv ${OS}-${ARCH}/_${BIN_NAME} ${COMP_PREFIX}/_${BIN_NAME}
+    mv ${OS}-${ARCH}/_${NAME} ${COMP_PREFIX}/_${NAME}
   fi
 fi
 

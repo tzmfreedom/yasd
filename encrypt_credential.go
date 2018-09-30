@@ -16,7 +16,7 @@ func encryptCredential(c *cli.Context) error {
 		return err
 	}
 	fmt.Print("Password: ")
-	b, err := terminal.ReadPassword(syscall.Stdin)
+	b, err := terminal.ReadPassword(int(syscall.Stdin))
 	if err != nil {
 		return err
 	}
