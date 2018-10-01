@@ -2,49 +2,6 @@
 
 
 [[projects]]
-  digest = "1:9f3b30d9f8e0d7040f729b82dcbc8f0dead820a133b3147ce355fc451f32d761"
-  name = "github.com/BurntSushi/toml"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "3012a1dbe2e4bd1391d42b32f0577cb7bbc7f005"
-  version = "v0.3.1"
-
-[[projects]]
-  digest = "1:9afe71ca59bcc3787794137ba39614e08b728f16244cd8b45a4d27671d229a8f"
-  name = "github.com/aws/aws-sdk-go"
-  packages = [
-    "aws",
-    "aws/awserr",
-    "aws/awsutil",
-    "aws/client",
-    "aws/client/metadata",
-    "aws/credentials",
-    "aws/endpoints",
-    "aws/request",
-    "internal/sdkio",
-    "internal/sdkrand",
-    "internal/shareddefaults",
-  ]
-  pruneopts = "UT"
-  revision = "a8ff9e4804fc89c994b731b1c057640ab2aecff3"
-  version = "v1.15.45"
-
-[[projects]]
-  digest = "1:5abd6a22805b1919f6a6bca0ae58b13cef1f3412812f38569978f43ef02743d4"
-  name = "github.com/go-ini/ini"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "5cf292cae48347c2490ac1a58fe36735fb78df7e"
-  version = "v1.38.2"
-
-[[projects]]
-  digest = "1:e22af8c7518e1eab6f2eab2b7d7558927f816262586cd6ed9f349c97a6c285c4"
-  name = "github.com/jmespath/go-jmespath"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "0b12d6b5"
-
-[[projects]]
   digest = "1:16dd6b893b78a50564cdde1d9f7ea67224dece11bb0886bd882f1dc3dc1d440d"
   name = "github.com/k0kubun/pp"
   packages = ["."]
@@ -85,12 +42,9 @@
   revision = "de5a7af38a2d1307d5a2af541856b40885e99aab"
 
 [[projects]]
-  digest = "1:5f1425074efce8ad776450fda6bdd11e816c825771ba56654493d5fdeac27322"
+  digest = "1:b24d38b282bacf9791408a080f606370efa3d364e4b5fd9ba0f7b87786d3b679"
   name = "github.com/urfave/cli"
-  packages = [
-    ".",
-    "altsrc",
-  ]
+  packages = ["."]
   pruneopts = "UT"
   revision = "cfb38830724cc34fedffe9a2a29fb54fa9169cd1"
   version = "v1.20.0"
@@ -131,14 +85,6 @@
   version = "v0.3.0"
 
 [[projects]]
-  digest = "1:b24d38b282bacf9791408a080f606370efa3d364e4b5fd9ba0f7b87786d3b679"
-  name = "gopkg.in/urfave/cli.v1"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "cfb38830724cc34fedffe9a2a29fb54fa9169cd1"
-  version = "v1.20.0"
-
-[[projects]]
   digest = "1:342378ac4dcb378a5448dd723f0784ae519383532f5e70ade24132c4c8693202"
   name = "gopkg.in/yaml.v2"
   packages = ["."]
@@ -150,12 +96,10 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
-    "github.com/aws/aws-sdk-go/aws/client",
     "github.com/k0kubun/pp",
     "github.com/tealeg/xlsx",
     "github.com/tzmfreedom/go-soapforce",
     "github.com/urfave/cli",
-    "github.com/urfave/cli/altsrc",
     "golang.org/x/crypto/ssh/terminal",
     "golang.org/x/text/encoding/japanese",
     "golang.org/x/text/transform",

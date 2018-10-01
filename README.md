@@ -20,7 +20,7 @@ Set-ExecutionPolicy Bypass -Scope Process -Force; iex ((New-Object System.Net.We
 
 For Linux, MacOS user
 ```bash
-$ curl -sL http://install.freedom-man.com/yasd | bash
+$ curl -sL http://install.freedom-man.com/yasd.sh | bash
 ```
 
 For golang user
@@ -58,6 +58,13 @@ $ yasd delete -t {Salesforce Object Name} -f {path to source file} [--mapping {p
 Undelete records
 ```bash
 $ yasd undelete -t {Salesforce Object Name} -f {path to source file} [--mapping {path to mapping file}]
+```
+
+Encrypting Password
+```bash
+$ yasd generate-key > /path/to/key
+$ yasd encrypt --key /path/to/key
+# input your password interactively
 ```
 
 #### Common Option

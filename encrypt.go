@@ -40,7 +40,7 @@ func decrypt(b64EncodedCipherText string, key []byte) (string, error) {
 		return "", err
 	}
 
-	plain := make([]byte, len(cipherText))
+	plain := make([]byte, len(cipherText[aes.BlockSize:]))
 	decrypter := cipher.NewCBCDecrypter(block, cipherText[:aes.BlockSize])
 	decrypter.CryptBlocks(plain, cipherText[aes.BlockSize:])
 	padSize := int(plain[len(plain)-1])
@@ -57,10 +57,7 @@ func generateKey() ([]byte, error) {
 }
 
 func padPKCS7(data []byte) []byte {
-	padSize := 0
-	if len(data)%aes.BlockSize != 0 {
-		padSize = aes.BlockSize - len(data)%aes.BlockSize
-	}
+	padSize := aes.BlockSize - len(data)%aes.BlockSize
 	appendChars := bytes.Repeat([]byte{byte(padSize)}, padSize)
 	return append(data, appendChars...)
 }

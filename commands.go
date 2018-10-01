@@ -130,10 +130,6 @@ func defaultFlags() []cli.Flag {
 			EnvVar: "SALESFORCE_APIVERSION",
 		},
 		cli.StringFlag{
-			Name:  "mode",
-			Value: "utf8",
-		},
-		cli.StringFlag{
 			Name:  "encoding",
 			Value: "utf8",
 		},
