@@ -35,11 +35,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:fb387a99de2674f763267012c78c4e48b80b05656154b4b48934da809f00bfa5"
+  digest = "1:9e079203777211d90cbb9d6bf4a5c3534de918b77fce4f9374097b364b7f64f4"
   name = "github.com/tzmfreedom/go-soapforce"
   packages = ["."]
   pruneopts = "UT"
-  revision = "de5a7af38a2d1307d5a2af541856b40885e99aab"
+  revision = "cb6a581990ec72d5aab7fe233ac797c856bf38eb"
 
 [[projects]]
   digest = "1:b24d38b282bacf9791408a080f606370efa3d364e4b5fd9ba0f7b87786d3b679"
@@ -55,7 +55,7 @@
   name = "golang.org/x/crypto"
   packages = ["ssh/terminal"]
   pruneopts = "UT"
-  revision = "5295e8364332db77d75fce11f1d19c053919a9c9"
+  revision = "e3636079e1a4c1f337f212cc5cd2aca108f6c900"
 
 [[projects]]
   branch = "master"

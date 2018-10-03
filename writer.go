@@ -56,10 +56,40 @@ func (w *CsvWriter) Write(headers []string, record *soapforce.SObject) error {
 		if strings.ToLower(h) == "id" {
 			values[i] = record.Id
 		} else {
-			values[i] = m.Get(h).(string)
+			if strings.Contains(h, ".") {
+				values[i] = getField(m, h)
+			} else {
+				values[i] = m.Get(h).(string)
+			}
 		}
 	}
 	return w.writer.Write(values)
+}
+
+func getField(m *caseInsensitiveMap, h string) string {
+	keys := strings.Split(h, ".")
+	fields := keys[:len(keys)-2]
+	v := m.Get(keys[0])
+	if v == nil {
+		return ""
+	}
+	sobj := v.(*soapforce.SObject)
+
+	for _, field := range fields {
+		m = newCaseInsensitiveMap(sobj.Fields)
+		v = m.Get(field)
+		if v == nil {
+			return ""
+		}
+		sobj = v.(*soapforce.SObject)
+	}
+
+	m = newCaseInsensitiveMap(sobj.Fields)
+	v = m.Get(keys[len(keys)-1])
+	if v == nil {
+		return ""
+	}
+	return v.(string)
 }
 
 func (w *CsvWriter) Close() error {
@@ -181,7 +211,13 @@ func getWriteFields(r *soapforce.SObject) map[string]interface{} {
 		f["Id"] = r.Id
 	}
 	for k, v := range r.Fields {
-		f[k] = v
+		if sv, ok := v.(string); ok {
+			f[k] = sv
+		} else if sobj, ok := v.(*soapforce.SObject); ok {
+			f[k] = getWriteFields(sobj)
+		} else {
+			f[k] = v
+		}
 	}
 	return f
 }
