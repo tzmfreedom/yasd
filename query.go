@@ -69,9 +69,14 @@ func buildQuery(c *soapforce.Client, original string) (string, error) {
 }
 
 func getFields(q string) []string {
-	r := regexp.MustCompile(`(?i)SELECT\s+([a-zA-Z\d_,\s]+)\sFROM\s`)
+	r := regexp.MustCompile(`(?i)SELECT\s+([a-zA-Z\.\d_,\s]+)\sFROM\s`)
 	matches := r.FindStringSubmatch(q)
-	return strings.Split(matches[1], ",")
+	untrimedFields := strings.Split(matches[1], ",")
+	fields := make([]string, len(untrimedFields))
+	for i, f := range untrimedFields {
+		fields[i] = strings.TrimSpace(f)
+	}
+	return fields
 }
 
 func validateExportCommand(c *cli.Context) error {
@@ -83,7 +88,7 @@ func validateExportCommand(c *cli.Context) error {
 		_ = cli.ShowCommandHelp(c, "export")
 		return cli.NewExitError("query is required", 1)
 	}
-	r := regexp.MustCompile(`(?i)SELECT\s+([a-zA-Z\d_,\s]+)\sFROM\s`)
+	r := regexp.MustCompile(`(?i)SELECT\s+([a-zA-Z\.\d_,\s]+)\sFROM\s`)
 	if !r.MatchString(q) {
 		r := regexp.MustCompile(`(?i)SELECT\s+(\*)\s+FROM\s+([a-zA-Z\d_]+)`)
 		if !r.MatchString(q) {
