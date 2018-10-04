@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"strings"
 
-	"github.com/k0kubun/pp"
 	"github.com/tzmfreedom/go-soapforce"
 	"github.com/urfave/cli"
 	"gopkg.in/yaml.v2"
@@ -84,7 +83,6 @@ func createSObject(client *soapforce.Client, sObjectType string, headers []strin
 				referenceField := strings.Replace(values[0], "__R", "__r", -1)
 
 				obj := map[string]string{}
-				pp.Print(globalReferenceMap)
 				obj["type"] = globalReferenceMap[client.UserInfo.OrganizationId][referenceField]
 				obj[values[1]] = f[i]
 				fields[values[0]] = obj

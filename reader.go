@@ -7,16 +7,19 @@ import (
 	"path/filepath"
 	"strings"
 
+	yaml "gopkg.in/yaml.v1"
+
 	"bufio"
 
 	"io"
+
+	"encoding/json"
+	"io/ioutil"
 
 	"github.com/tealeg/xlsx"
 	"github.com/urfave/cli"
 	"golang.org/x/text/encoding/japanese"
 	"golang.org/x/text/transform"
-	"encoding/json"
-	"io/ioutil"
 )
 
 type Stringer interface {
@@ -52,6 +55,28 @@ func (r *CsvReader) Read() ([]string, error) {
 
 func (r *CsvReader) Close() error {
 	return r.f.Close()
+}
+
+func newCsvReader(filename string, encoding string, mode string, start int) (*CsvReader, error) {
+	f, err := os.Open(filename)
+	if err != nil {
+		return nil, err
+	}
+	var r *csv.Reader
+	switch strings.ToUpper(encoding) {
+	case "UTF8", "UTF-8":
+		r = csv.NewReader(f)
+	case "SHIFT-JIS", "SJIS":
+		r = csv.NewReader(transform.NewReader(f, japanese.ShiftJIS.NewDecoder()))
+	case "EUC-JP", "EUCJP":
+		r = csv.NewReader(transform.NewReader(f, japanese.EUCJP.NewDecoder()))
+	}
+	if mode == "tsv" {
+		r.Comma = '\t'
+	}
+	r.LazyQuotes = true
+
+	return &CsvReader{cr: r, f: f, startRow: start}, nil
 }
 
 type ExcelReader struct {
@@ -206,7 +231,7 @@ func (r *JsonlReader) Close() error {
 	return r.f.Close()
 }
 
-func newJsonlReader(filenamt string, startRow int) (*JsonlReader, error) {
+func newJsonlReader(filename string, startRow int) (*JsonlReader, error) {
 	records := []map[string]interface{}{}
 	b, err := ioutil.ReadFile(filename)
 	if err != nil {
@@ -214,6 +239,41 @@ func newJsonlReader(filenamt string, startRow int) (*JsonlReader, error) {
 	}
 	json.Unmarshal(b, records)
 	return &JsonlReader{records: records, startRow: startRow}, nil
+}
+
+type YamlReader struct {
+	records  []map[string]interface{}
+	f        *os.File
+	counter  int
+	startRow int
+}
+
+func (r *YamlReader) Read() ([]string, error) {
+	if len(r.records) <= r.counter {
+		return nil, io.EOF
+	}
+	if r.startRow > r.counter {
+		r.counter++
+		return nil, nil
+	}
+	record := r.records[r.counter]
+	values := make([]string, len(record))
+	r.counter++
+	return values, nil
+}
+
+func (r *YamlReader) Close() error {
+	return r.f.Close()
+}
+
+func newYamlReader(filename string, startRow int) (*YamlReader, error) {
+	records := []map[string]interface{}{}
+	b, err := ioutil.ReadFile(filename)
+	if err != nil {
+		return nil, err
+	}
+	yaml.Unmarshal(b, records)
+	return &YamlReader{records: records, startRow: startRow}, nil
 }
 
 func getReader(c *cli.Context) (Reader, error) {
@@ -227,33 +287,16 @@ func getReader(c *cli.Context) (Reader, error) {
 	var err error
 	switch ext {
 	case ".csv", ".tsv":
-		fp, err := os.Open(f)
-		if err != nil {
-			return nil, err
-		}
-		var cr *csv.Reader
-		switch strings.ToUpper(encoding) {
-		case "UTF8", "UTF-8":
-			cr = csv.NewReader(fp)
-		case "SHIFT-JIS", "SJIS":
-			cr = csv.NewReader(transform.NewReader(fp, japanese.ShiftJIS.NewDecoder()))
-		case "EUC-JP", "EUCJP":
-			cr = csv.NewReader(transform.NewReader(fp, japanese.EUCJP.NewDecoder()))
-		}
-		if mode == "tsv" {
-			cr.Comma = '\t'
-		}
-		cr.LazyQuotes = true
-
-		r = &CsvReader{cr: cr, f: fp, startRow: start}
+		r, err = newCsvReader(f, encoding, mode, start)
 	case ".xlsx":
 		s := "import"
 		r, err = newExcelReader(f, s, start)
 	case ".json":
-		r, err = newJsonReader(f, s)
+		r, err = newJsonReader(f, start)
 	case ".jsonl":
-		r, err = newJsonlReader(f, s)
+		r, err = newJsonlReader(f, start)
 	case ".yaml", ".yml":
+		r, err = newYamlReader(f, start)
 	case ".dat":
 		r, err = newFixWidthFileReader(f, encoding)
 	}

@@ -4,7 +4,6 @@ import (
 	"io"
 	"strings"
 
-	"github.com/k0kubun/pp"
 	"github.com/tzmfreedom/go-soapforce"
 	"github.com/urfave/cli"
 )
@@ -102,7 +101,6 @@ func createInsertSObject(client *soapforce.Client, sObjectType string, headers [
 				referenceField := strings.Replace(values[0], "__R", "__r", -1)
 
 				obj := map[string]string{}
-				pp.Print(globalReferenceMap)
 				obj["type"] = globalReferenceMap[client.UserInfo.OrganizationId][referenceField]
 				obj[values[1]] = f[i]
 				fields[values[0]] = obj

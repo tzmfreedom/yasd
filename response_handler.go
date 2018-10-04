@@ -7,7 +7,6 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/k0kubun/pp"
 	"github.com/tzmfreedom/go-soapforce"
 	"github.com/urfave/cli"
 	"golang.org/x/text/encoding/japanese"
@@ -47,7 +46,6 @@ func (h *ResponseWriteHandler) Handle(results []*soapforce.SaveResult) error {
 			for _, error := range result.Errors {
 				errorMessages = append(errorMessages, error.Message)
 			}
-			pp.Print(result)
 			errorMsg := strings.Join(errorMessages, ":")
 			fields = append(fields, errorMsg)
 			h.errorWriter.Write(fields)
@@ -92,7 +90,6 @@ func (h *ResponseWriteHandler) HandleDelete(results []*soapforce.DeleteResult) e
 			for _, error := range result.Errors {
 				errorMessages = append(errorMessages, error.Message)
 			}
-			pp.Print(result)
 			errorMsg := strings.Join(errorMessages, ":")
 			fields = append(fields, errorMsg)
 			h.errorWriter.Write(fields)
@@ -115,7 +112,6 @@ func (h *ResponseWriteHandler) HandleUndelete(results []*soapforce.UndeleteResul
 			for _, error := range result.Errors {
 				errorMessages = append(errorMessages, error.Message)
 			}
-			pp.Print(result)
 			errorMsg := strings.Join(errorMessages, ":")
 			fields = append(fields, errorMsg)
 			h.errorWriter.Write(fields)
