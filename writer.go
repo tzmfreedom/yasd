@@ -12,6 +12,7 @@ import (
 	"encoding/json"
 
 	"github.com/k0kubun/pp"
+	"github.com/tealeg/xlsx"
 	"github.com/tzmfreedom/go-soapforce"
 	"github.com/urfave/cli"
 	"golang.org/x/text/encoding/japanese"
@@ -205,6 +206,52 @@ func (w *YamlWriter) Close() error {
 	return w.e.Encode(w.r)
 }
 
+type XlsxWriter struct {
+	s     *xlsx.Sheet
+	f     *xlsx.File
+	fName string
+}
+
+func (w *XlsxWriter) Header(headers []string) error {
+	row := w.s.AddRow()
+	for _, h := range headers {
+		cell := row.AddCell()
+		cell.Value = h
+	}
+	return nil
+}
+
+func (w *XlsxWriter) Write(headers []string, record *soapforce.SObject) error {
+	m := newCaseInsensitiveMap(record.Fields)
+	row := w.s.AddRow()
+	for _, h := range headers {
+		cell := row.AddCell()
+		if strings.ToLower(h) == "id" {
+			cell.Value = record.Id
+		} else {
+			if strings.Contains(h, ".") {
+				cell.Value = getField(m, h)
+			} else {
+				cell.Value = m.Get(h).(string)
+			}
+		}
+	}
+	return nil
+}
+
+func (w *XlsxWriter) Close() error {
+	return w.f.Save(w.fName)
+}
+
+func newXlsxWriter(fName string) (*XlsxWriter, error) {
+	f := xlsx.NewFile()
+	s, err := f.AddSheet("Sheet1")
+	if err != nil {
+		return nil, err
+	}
+	return &XlsxWriter{f: f, s: s, fName: fName}, nil
+}
+
 func getWriteFields(r *soapforce.SObject) map[string]interface{} {
 	f := map[string]interface{}{}
 	if r.Id != "" {
@@ -251,6 +298,9 @@ func getWriter(c *cli.Context) (writer, error) {
 		return newJsonWriter()
 	case "yaml", "yml":
 		return newYamlWriter()
+	case "xlsx":
+		fName := c.String("file")
+		return newXlsxWriter(fName)
 	case "debug":
 		return &PPWriter{}, nil
 	default:

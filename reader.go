@@ -9,6 +9,8 @@ import (
 
 	"bufio"
 
+	"io"
+
 	"github.com/tealeg/xlsx"
 	"github.com/urfave/cli"
 	"golang.org/x/text/encoding/japanese"
@@ -55,9 +57,13 @@ type ExcelReader struct {
 	xs       *xlsx.Sheet
 	counter  int
 	startRow int
+	maxRow   int
 }
 
 func (r *ExcelReader) Read() ([]string, error) {
+	if r.maxRow <= r.counter {
+		return nil, io.EOF
+	}
 	if r.startRow > r.counter {
 		r.counter++
 		return nil, nil
@@ -125,11 +131,13 @@ func newExcelReader(f string, sheet string, start int) (*ExcelReader, error) {
 	}
 	for _, s := range xf.Sheets {
 		if s.Name == sheet {
+
 			return &ExcelReader{
 				counter:  0,
 				xf:       xf,
 				xs:       s,
 				startRow: start,
+				maxRow:   s.MaxRow,
 			}, nil
 		}
 	}
@@ -166,14 +174,14 @@ func getReader(c *cli.Context) (Reader, error) {
 		cr.LazyQuotes = true
 
 		r = &CsvReader{cr: cr, f: fp, startRow: start}
-	case ".xls":
+	case ".xlsx":
 		s := "import"
 		r, err = newExcelReader(f, s, start)
 		if err != nil {
 			return nil, err
 		}
-	case ".xlsx":
 	case ".json":
+	case ".dat":
 	}
 	return r, nil
 }

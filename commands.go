@@ -22,6 +22,9 @@ var Commands = []cli.Command{
 				Value: 500,
 			},
 			cli.StringFlag{
+				Name: "file",
+			},
+			cli.StringFlag{
 				Name: "mode",
 			},
 		),
