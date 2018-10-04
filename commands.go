@@ -24,9 +24,6 @@ var Commands = []cli.Command{
 			cli.StringFlag{
 				Name: "file",
 			},
-			cli.StringFlag{
-				Name: "mode",
-			},
 		),
 		Action: func(c *cli.Context) error {
 			return query(c)
@@ -156,6 +153,9 @@ func defaultDmlFlags() []cli.Flag {
 		},
 		cli.StringFlag{
 			Name: "type, t",
+		},
+		cli.StringFlag{
+			Name: "mode",
 		},
 		cli.StringFlag{
 			Name:  "success-file",

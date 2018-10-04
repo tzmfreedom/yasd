@@ -15,6 +15,8 @@ import (
 	"github.com/urfave/cli"
 	"golang.org/x/text/encoding/japanese"
 	"golang.org/x/text/transform"
+	"encoding/json"
+	"io/ioutil"
 )
 
 type Stringer interface {
@@ -144,6 +146,76 @@ func newExcelReader(f string, sheet string, start int) (*ExcelReader, error) {
 	return nil, errors.New("Sheet does not exists")
 }
 
+type JsonReader struct {
+	records  []map[string]interface{}
+	f        *os.File
+	counter  int
+	startRow int
+}
+
+func (r *JsonReader) Read() ([]string, error) {
+	if len(r.records) <= r.counter {
+		return nil, io.EOF
+	}
+	if r.startRow > r.counter {
+		r.counter++
+		return nil, nil
+	}
+	record := r.records[r.counter]
+	values := make([]string, len(record))
+	r.counter++
+	return values, nil
+}
+
+func (r *JsonReader) Close() error {
+	return r.f.Close()
+}
+
+func newJsonReader(filename string, startRow int) (*JsonReader, error) {
+	records := []map[string]interface{}{}
+	b, err := ioutil.ReadFile(filename)
+	if err != nil {
+		return nil, err
+	}
+	json.Unmarshal(b, records)
+	return &JsonReader{records: records, startRow: startRow}, nil
+}
+
+type JsonlReader struct {
+	records  []map[string]interface{}
+	f        *os.File
+	counter  int
+	startRow int
+}
+
+func (r *JsonlReader) Read() ([]string, error) {
+	if len(r.records) <= r.counter {
+		return nil, io.EOF
+	}
+	if r.startRow > r.counter {
+		r.counter++
+		return nil, nil
+	}
+	record := r.records[r.counter]
+	values := make([]string, len(record))
+	r.counter++
+	return values, nil
+}
+
+func (r *JsonlReader) Close() error {
+	return r.f.Close()
+}
+
+func newJsonlReader(filenamt string, startRow int) (*JsonlReader, error) {
+	records := []map[string]interface{}{}
+	b, err := ioutil.ReadFile(filename)
+	if err != nil {
+		return nil, err
+	}
+	json.Unmarshal(b, records)
+	return &JsonlReader{records: records, startRow: startRow}, nil
+}
+
 func getReader(c *cli.Context) (Reader, error) {
 	f := c.String("file")
 	encoding := c.String("encoding")
@@ -154,7 +226,7 @@ func getReader(c *cli.Context) (Reader, error) {
 	var r Reader
 	var err error
 	switch ext {
-	case ".csv":
+	case ".csv", ".tsv":
 		fp, err := os.Open(f)
 		if err != nil {
 			return nil, err
@@ -177,11 +249,13 @@ func getReader(c *cli.Context) (Reader, error) {
 	case ".xlsx":
 		s := "import"
 		r, err = newExcelReader(f, s, start)
-		if err != nil {
-			return nil, err
-		}
 	case ".json":
+		r, err = newJsonReader(f, s)
+	case ".jsonl":
+		r, err = newJsonlReader(f, s)
+	case ".yaml", ".yml":
 	case ".dat":
+		r, err = newFixWidthFileReader(f, encoding)
 	}
-	return r, nil
+	return r, err
 }
