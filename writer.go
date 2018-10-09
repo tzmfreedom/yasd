@@ -243,9 +243,17 @@ func (w *XlsxWriter) Close() error {
 	return w.f.Save(w.fName)
 }
 
-func newXlsxWriter(fName string) (*XlsxWriter, error) {
-	f := xlsx.NewFile()
-	s, err := f.AddSheet("Sheet1")
+func newXlsxWriter(fName string, sheetName string) (*XlsxWriter, error) {
+	var f *xlsx.File
+	if _, err := os.Stat(fName); err != nil {
+		f = xlsx.NewFile()
+	} else {
+		f, err = xlsx.OpenFile(fName)
+		if err != nil {
+			return nil, err
+		}
+	}
+	s, err := f.AddSheet(sheetName)
 	if err != nil {
 		return nil, err
 	}
@@ -300,7 +308,8 @@ func getWriter(c *cli.Context) (writer, error) {
 		return newYamlWriter()
 	case "xlsx":
 		fName := c.String("file")
-		return newXlsxWriter(fName)
+		s := c.String("sheet")
+		return newXlsxWriter(fName, s)
 	case "debug":
 		return &PPWriter{}, nil
 	default:

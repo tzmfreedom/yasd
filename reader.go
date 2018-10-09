@@ -289,7 +289,7 @@ func getReader(c *cli.Context) (Reader, error) {
 	case ".csv", ".tsv":
 		r, err = newCsvReader(f, encoding, mode, start)
 	case ".xlsx":
-		s := "import"
+		s := c.String("sheet")
 		r, err = newExcelReader(f, s, start)
 	case ".json":
 		r, err = newJsonReader(f, start)

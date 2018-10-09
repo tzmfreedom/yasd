@@ -14,15 +14,19 @@ var Commands = []cli.Command{
 			cli.StringFlag{
 				Name: "query, q",
 			},
-			cli.StringFlag{
-				Name: "format",
-			},
 			cli.IntFlag{
 				Name:  "batch-size",
 				Value: 500,
 			},
 			cli.StringFlag{
 				Name: "file",
+			},
+			cli.StringFlag{
+				Name: "format",
+			},
+			cli.StringFlag{
+				Name: "sheet",
+				Value: "import",
 			},
 		),
 		Action: func(c *cli.Context) error {
@@ -156,6 +160,10 @@ func defaultDmlFlags() []cli.Flag {
 		},
 		cli.StringFlag{
 			Name: "mode",
+		},
+		cli.StringFlag{
+			Name: "sheet",
+			Value: "import",
 		},
 		cli.StringFlag{
 			Name:  "success-file",
