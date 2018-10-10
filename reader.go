@@ -16,12 +16,13 @@ import (
 	"encoding/json"
 	"io/ioutil"
 
+	"fmt"
+	"strconv"
+
 	"github.com/tealeg/xlsx"
 	"github.com/urfave/cli"
 	"golang.org/x/text/encoding/japanese"
 	"golang.org/x/text/transform"
-	"strconv"
-	"fmt"
 )
 
 type Stringer interface {
@@ -148,7 +149,7 @@ func (r *FixWidthFileReader) Read() ([]string, error) {
 		start := 0
 		values := make([]string, len(r.byteNumbers))
 		for i, n := range r.byteNumbers {
-			if len(t) < start + n {
+			if len(t) < start+n {
 				return nil, fmt.Errorf("dat is not valid length at line %d", i)
 			}
 			value, err := s.String(t[start : start+n])

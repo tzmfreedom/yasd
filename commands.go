@@ -25,7 +25,7 @@ var Commands = []cli.Command{
 				Name: "format",
 			},
 			cli.StringFlag{
-				Name: "sheet",
+				Name:  "sheet",
 				Value: "import",
 			},
 		),
@@ -162,7 +162,7 @@ func defaultDmlFlags() []cli.Flag {
 			Name: "mode",
 		},
 		cli.StringFlag{
-			Name: "sheet",
+			Name:  "sheet",
 			Value: "import",
 		},
 		cli.StringFlag{

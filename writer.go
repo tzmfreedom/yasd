@@ -60,9 +60,6 @@ func (w *CsvWriter) Write(headers []string, record *soapforce.SObject) error {
 			if strings.Contains(h, ".") {
 				values[i] = getField(m, h)
 			} else {
-				pp.Println(h)
-				pp.Println(m.Get(h))
-				pp.Println(m)
 				values[i] = m.Get(h).(string)
 			}
 		}
