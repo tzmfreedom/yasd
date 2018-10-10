@@ -4,31 +4,58 @@ import (
 	"github.com/urfave/cli"
 )
 
+var exportFlags = append(
+	defaultFlags(),
+	cli.StringFlag{
+		Name: "query, q",
+	},
+	cli.IntFlag{
+		Name:  "batch-size",
+		Value: 500,
+	},
+	cli.StringFlag{
+		Name: "file",
+	},
+	cli.StringFlag{
+		Name: "format",
+	},
+	cli.StringFlag{
+		Name:  "sheet",
+		Value: "import",
+	},
+)
+
+var insertFlags = append(
+	defaultDmlFlags(),
+	cli.BoolFlag{
+		Name: "insert-nulls",
+	},
+)
+
+var updateFlags = append(
+	defaultDmlFlags(),
+	cli.BoolFlag{
+		Name: "insert-nulls",
+	},
+)
+
+var upsertFlags = append(
+	defaultDmlFlags(),
+	cli.StringFlag{
+		Name:  "upsert-key, k",
+		Value: "Id",
+	},
+	cli.BoolFlag{
+		Name: "insert-nulls",
+	},
+)
+
 var Commands = []cli.Command{
 	{
 		Name:    "export",
 		Aliases: []string{"e"},
 		Usage:   "Export SObject Record",
-		Flags: append(
-			defaultFlags(),
-			cli.StringFlag{
-				Name: "query, q",
-			},
-			cli.IntFlag{
-				Name:  "batch-size",
-				Value: 500,
-			},
-			cli.StringFlag{
-				Name: "file",
-			},
-			cli.StringFlag{
-				Name: "format",
-			},
-			cli.StringFlag{
-				Name:  "sheet",
-				Value: "import",
-			},
-		),
+		Flags: exportFlags,
 		Action: func(c *cli.Context) error {
 			return query(c)
 		},
@@ -37,12 +64,7 @@ var Commands = []cli.Command{
 		Name:    "insert",
 		Aliases: []string{"i"},
 		Usage:   "Insert SObject Record",
-		Flags: append(
-			defaultDmlFlags(),
-			cli.BoolFlag{
-				Name: "insert-nulls",
-			},
-		),
+		Flags: insertFlags,
 		Action: func(c *cli.Context) error {
 			return insert(c)
 		},
@@ -51,12 +73,7 @@ var Commands = []cli.Command{
 		Name:    "update",
 		Aliases: []string{"u"},
 		Usage:   "Update SObject Record",
-		Flags: append(
-			defaultDmlFlags(),
-			cli.BoolFlag{
-				Name: "insert-nulls",
-			},
-		),
+		Flags: updateFlags,
 		Action: func(c *cli.Context) error {
 			return update(c)
 		},
@@ -64,16 +81,7 @@ var Commands = []cli.Command{
 	{
 		Name:  "upsert",
 		Usage: "Upsert SObject Record",
-		Flags: append(
-			defaultDmlFlags(),
-			cli.StringFlag{
-				Name:  "upsert-key, k",
-				Value: "Id",
-			},
-			cli.BoolFlag{
-				Name: "insert-nulls",
-			},
-		),
+		Flags: upsertFlags,
 		Action: func(c *cli.Context) error {
 			return upsert(c)
 		},

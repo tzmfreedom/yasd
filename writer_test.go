@@ -135,3 +135,36 @@ func TestYamlWrite(t *testing.T) {
 		t.Fatalf("expected: '%s', but '%s'", expected, buf.String())
 	}
 }
+
+func TestCaseInsentivieGet(t *testing.T) {
+	m := map[string]interface{}{
+		"AAA": "aaa",
+		"BBB": "bbb",
+		"CcC": "ccc",
+		"ddd": "DDD",
+	}
+	cim := newCaseInsensitiveMap(m)
+	for _, v := range m {
+		actual := cim.Get(v.(string))
+		expected := v.(string)
+		if actual != expected {
+			t.Fatalf("expected: '%s', but '%s'", expected, actual)
+		}
+	}
+}
+
+func TestCaseInsentivieSet(t *testing.T) {
+	m := map[string]interface{}{}
+	cim := newCaseInsensitiveMap(m)
+	cim.Set("aaa", "bbb")
+
+	actual := cim.Get("AAA")
+	expected := "bbb"
+	if actual != expected {
+		t.Fatalf("expected: '%s', but '%s'", expected, actual)
+	}
+	actual = cim.Get("aaa")
+	if actual != expected {
+		t.Fatalf("expected: '%s', but '%s'", expected, actual)
+	}
+}
