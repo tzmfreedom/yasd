@@ -20,6 +20,8 @@ import (
 	"github.com/urfave/cli"
 	"golang.org/x/text/encoding/japanese"
 	"golang.org/x/text/transform"
+	"strconv"
+	"fmt"
 )
 
 type Stringer interface {
@@ -106,6 +108,26 @@ func (r *ExcelReader) Read() ([]string, error) {
 
 func (r *ExcelReader) Close() error { return nil }
 
+func newExcelReader(f string, sheet string, start int) (*ExcelReader, error) {
+	xf, err := xlsx.OpenFile(f)
+	if err != nil {
+		return nil, err
+	}
+	for _, s := range xf.Sheets {
+		if s.Name == sheet {
+
+			return &ExcelReader{
+				counter:  0,
+				xf:       xf,
+				xs:       s,
+				startRow: start,
+				maxRow:   s.MaxRow,
+			}, nil
+		}
+	}
+	return nil, errors.New("Sheet does not exists")
+}
+
 type FixWidthFileReader struct {
 	f           *os.File
 	s           *bufio.Scanner
@@ -126,6 +148,9 @@ func (r *FixWidthFileReader) Read() ([]string, error) {
 		start := 0
 		values := make([]string, len(r.byteNumbers))
 		for i, n := range r.byteNumbers {
+			if len(t) < start + n {
+				return nil, fmt.Errorf("dat is not valid length at line %d", i)
+			}
 			value, err := s.String(t[start : start+n])
 			if err != nil {
 				return nil, err
@@ -142,33 +167,13 @@ func (r *FixWidthFileReader) Close() error {
 	return r.f.Close()
 }
 
-func newFixWidthFileReader(f string, e string) (*FixWidthFileReader, error) {
+func newFixWidthFileReader(f string, e string, byteNumbers []int) (*FixWidthFileReader, error) {
 	fp, err := os.Open(f)
 	if err != nil {
 		return nil, err
 	}
 	s := bufio.NewScanner(fp)
-	return &FixWidthFileReader{f: fp, s: s, e: e, byteNumbers: []int{6, 7, 3}}, nil
-}
-
-func newExcelReader(f string, sheet string, start int) (*ExcelReader, error) {
-	xf, err := xlsx.OpenFile(f)
-	if err != nil {
-		return nil, err
-	}
-	for _, s := range xf.Sheets {
-		if s.Name == sheet {
-
-			return &ExcelReader{
-				counter:  0,
-				xf:       xf,
-				xs:       s,
-				startRow: start,
-				maxRow:   s.MaxRow,
-			}, nil
-		}
-	}
-	return nil, errors.New("Sheet does not exists")
+	return &FixWidthFileReader{f: fp, s: s, e: e, byteNumbers: byteNumbers}, nil
 }
 
 type JsonReader struct {
@@ -298,7 +303,15 @@ func getReader(c *cli.Context) (Reader, error) {
 	case ".yaml", ".yml":
 		r, err = newYamlReader(f, start)
 	case ".dat":
-		r, err = newFixWidthFileReader(f, encoding)
+		bs := strings.Split(c.String("bytes"), ",")
+		bi := make([]int, len(bs))
+		for i, b := range bs {
+			bi[i], err = strconv.Atoi(b)
+			if err != nil {
+				return nil, err
+			}
+		}
+		r, err = newFixWidthFileReader(f, encoding, bi)
 	}
 	return r, err
 }

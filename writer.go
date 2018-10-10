@@ -60,6 +60,9 @@ func (w *CsvWriter) Write(headers []string, record *soapforce.SObject) error {
 			if strings.Contains(h, ".") {
 				values[i] = getField(m, h)
 			} else {
+				pp.Println(h)
+				pp.Println(m.Get(h))
+				pp.Println(m)
 				values[i] = m.Get(h).(string)
 			}
 		}
@@ -101,8 +104,8 @@ func (w *CsvWriter) Close() error {
 	return nil
 }
 
-func newCsvWriter(e string, comma rune) (*CsvWriter, error) {
-	w := newWriterWithEncoding(os.Stdout, e)
+func newCsvWriter(e string, comma rune, ioWriter io.Writer) (*CsvWriter, error) {
+	w := newWriterWithEncoding(ioWriter, e)
 	csvWriter := csv.NewWriter(w)
 	if runtime.GOOS == "windows" {
 		csvWriter.UseCRLF = true
@@ -139,8 +142,8 @@ type JsonWriter struct {
 	r []map[string]interface{}
 }
 
-func newJsonWriter() (*JsonWriter, error) {
-	e := json.NewEncoder(os.Stdout)
+func newJsonWriter(writer io.Writer) (*JsonWriter, error) {
+	e := json.NewEncoder(writer)
 	r := []map[string]interface{}{}
 	return &JsonWriter{e: e, r: r}, nil
 }
@@ -163,8 +166,8 @@ type JsonlWriter struct {
 	e *json.Encoder
 }
 
-func newJsonlWriter() (*JsonlWriter, error) {
-	e := json.NewEncoder(os.Stdout)
+func newJsonlWriter(writer io.Writer) (*JsonlWriter, error) {
+	e := json.NewEncoder(writer)
 	return &JsonlWriter{e: e}, nil
 }
 
@@ -186,8 +189,8 @@ type YamlWriter struct {
 	r []map[string]interface{}
 }
 
-func newYamlWriter() (*YamlWriter, error) {
-	e := yaml.NewEncoder(os.Stdout)
+func newYamlWriter(writer io.Writer) (*YamlWriter, error) {
+	e := yaml.NewEncoder(writer)
 	r := []map[string]interface{}{}
 	return &YamlWriter{e: e, r: r}, nil
 }
@@ -299,13 +302,13 @@ func getWriter(c *cli.Context) (writer, error) {
 
 	switch format {
 	case "csv", "tsv":
-		return newCsvWriter(e, comma)
+		return newCsvWriter(e, comma, os.Stdout)
 	case "jsonl":
-		return newJsonlWriter()
+		return newJsonlWriter(os.Stdout)
 	case "json":
-		return newJsonWriter()
+		return newJsonWriter(os.Stdout)
 	case "yaml", "yml":
-		return newYamlWriter()
+		return newYamlWriter(os.Stdout)
 	case "xlsx":
 		fName := c.String("file")
 		s := c.String("sheet")
@@ -313,6 +316,6 @@ func getWriter(c *cli.Context) (writer, error) {
 	case "debug":
 		return &PPWriter{}, nil
 	default:
-		return newCsvWriter(e, comma)
+		return newCsvWriter(e, comma, os.Stdout)
 	}
 }
