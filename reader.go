@@ -293,6 +293,9 @@ func getReader(c *cli.Context) (Reader, error) {
 	var err error
 	switch ext {
 	case ".csv", ".tsv":
+		if ext == ".tsv" {
+			mode = "tsv"
+		}
 		r, err = newCsvReader(f, encoding, mode, start)
 	case ".xlsx":
 		s := c.String("sheet")
