@@ -1,6 +1,6 @@
 NAME := yasd
 SRCS := $(shell find . -type d -name vendor -prune -o -type f -name "*.go" -print)
-VERSION := 0.1.1
+VERSION := 0.1.2
 REVISION := $(shell git rev-parse --short HEAD)
 LDFLAGS := -ldflags="-s -w -X \"main.Version=$(VERSION)\" -X \"main.Revision=$(REVISION)\"" 
 DIST_DIRS := find * -type d -exec
