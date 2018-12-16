@@ -55,7 +55,7 @@ var Commands = []cli.Command{
 		Name:    "export",
 		Aliases: []string{"e"},
 		Usage:   "Export SObject Record",
-		Flags: exportFlags,
+		Flags:   exportFlags,
 		Action: func(c *cli.Context) error {
 			return query(c)
 		},
@@ -64,7 +64,7 @@ var Commands = []cli.Command{
 		Name:    "insert",
 		Aliases: []string{"i"},
 		Usage:   "Insert SObject Record",
-		Flags: insertFlags,
+		Flags:   insertFlags,
 		Action: func(c *cli.Context) error {
 			return insert(c)
 		},
@@ -73,7 +73,7 @@ var Commands = []cli.Command{
 		Name:    "update",
 		Aliases: []string{"u"},
 		Usage:   "Update SObject Record",
-		Flags: updateFlags,
+		Flags:   updateFlags,
 		Action: func(c *cli.Context) error {
 			return update(c)
 		},

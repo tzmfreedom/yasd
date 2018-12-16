@@ -1,8 +1,8 @@
 package main
 
 import (
-	"testing"
 	"bytes"
+	"testing"
 )
 
 func TestEncryptDecrypt(t *testing.T) {
@@ -43,21 +43,21 @@ func TestGenerateKey(t *testing.T) {
 }
 
 func TestPadPKCS7(t *testing.T) {
-	testCases := []struct{
-		data []byte
+	testCases := []struct {
+		data     []byte
 		expected []byte
 	}{
 		{
 			[]byte{},
-			[]byte{16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16},
+			[]byte{16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16},
 		},
 		{
 			[]byte{1},
-			[]byte{1,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15},
+			[]byte{1, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15},
 		},
 		{
-			[]byte{1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
-			[]byte{1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
+			[]byte{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+			[]byte{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
 		},
 	}
 	for _, testCase := range testCases {

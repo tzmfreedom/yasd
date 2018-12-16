@@ -1,16 +1,16 @@
 package main
 
 import (
-	"testing"
-	"github.com/urfave/cli"
 	"flag"
 	"os"
+	"testing"
+
 	"github.com/tzmfreedom/go-soapforce"
+	"github.com/urfave/cli"
 )
 
 var username = os.Getenv("TEST_SALESFORCE_USERNAME")
 var password = os.Getenv("TEST_SALESFORCE_PASSWORD")
-
 
 func TestInsert(t *testing.T) {
 	app := cli.NewApp()
