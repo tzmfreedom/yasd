@@ -167,9 +167,6 @@ func defaultDmlFlags() []cli.Flag {
 			Name: "type, t",
 		},
 		cli.StringFlag{
-			Name: "mode",
-		},
-		cli.StringFlag{
 			Name:  "sheet",
 			Value: "import",
 		},

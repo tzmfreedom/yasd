@@ -287,12 +287,12 @@ func getReader(c *cli.Context) (Reader, error) {
 	encoding := c.String("encoding")
 	start := c.Int("start-row")
 	ext := filepath.Ext(f)
-	mode := c.String("mode")
 
 	var r Reader
 	var err error
 	switch ext {
 	case ".csv", ".tsv":
+		mode := ""
 		if ext == ".tsv" {
 			mode = "tsv"
 		}
