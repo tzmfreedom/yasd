@@ -236,7 +236,11 @@ func (w *XlsxWriter) Write(headers []string, record *soapforce.SObject) error {
 			if strings.Contains(h, ".") {
 				cell.Value = getField(m, h)
 			} else {
-				cell.Value = m.Get(h).(string)
+				if val := m.Get(h); val != nil {
+					cell.Value = val.(string)
+				} else {
+					cell.Value = ""
+				}
 			}
 		}
 	}
