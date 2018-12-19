@@ -1,6 +1,6 @@
 $name = "yasd"
 $bin_name = "yasd"
-$version = "0.1.2"
+$version = "0.1.3"
 $github_user = "tzmfreedom"
 If ($Env:PROCESSOR_ARCHITECTURE -match "64") {
   $arch = "amd64"

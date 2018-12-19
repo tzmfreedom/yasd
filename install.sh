@@ -1,7 +1,7 @@
 #!/bin/bash
 
 NAME="yasd"
-VERSION="0.1.2"
+VERSION="0.1.3"
 PREFIX="/usr/local"
 COMP_PREFIX="/usr/local/share/zsh/site-functions"
 GITHUB_USER="tzmfreedom"
